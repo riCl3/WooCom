@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.woocom" />
+                  <option name="mobileSdkAppId" value="1:364336791926:android:73d4d96a9ab26dfd343a57" />
+                  <option name="projectId" value="woocomapp-5e9ea" />
+                  <option name="projectNumber" value="364336791926" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

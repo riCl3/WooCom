@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "364336791926",
+    "project_id": "woocomapp-5e9ea",
+    "storage_bucket": "woocomapp-5e9ea.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364336791926:android:73d4d96a9ab26dfd343a57",
+        "android_client_info": {
+          "package_name": "com.example.woocom"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHpiUsnz-o7F5ecNpUq2aXn8V5tQsqMw8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
