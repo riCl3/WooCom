@@ -53,6 +53,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var context = LocalContext.current
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -188,11 +189,18 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
 
         Button(
             onClick = {
+                isLoading = true
                 authViewModel.signup(email,password,name){
                     success, errorMessage ->
                     if (success ){
-
+                        isLoading = false
+                        navController.navigate("home"){
+                            popUpTo("auth"){
+                                inclusive = true
+                            }
+                        }
                     }else {
+                        isLoading = false
                         AppUtil.showToast(context = context, errorMessage?:"Something went wrong")
                     }
                 }
@@ -213,9 +221,10 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent // Transparent background to let gradient show
             ), // Avoid excessive padding, set to 0
+            enabled = !isLoading // Disable the button if isLoading is true
         ) {
             Text(
-                text = "Sign Up",
+                text = if(isLoading) "Loading..." else "Sign Up",
                 style = TextStyle(fontSize = 20.sp, color = Color.Black)
             )
         }
