@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -38,15 +40,20 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.woocom.AppUtil
 import com.example.woocom.R
+import com.example.woocom.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel= viewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -151,7 +158,23 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController)
 
         Button(
             onClick = {
-                navController.navigate("login")
+
+                isLoading = true
+                authViewModel.login(email,password){
+                        success, errorMessage ->
+                    if (success ){
+                        isLoading = false
+                        navController.navigate("home"){
+                            popUpTo("auth"){
+                                inclusive = true
+                            }
+                        }
+                    }else {
+                        isLoading = false
+                        AppUtil.showToast(context = context, errorMessage?:"Something went wrong")
+                    }
+                }
+
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -169,9 +192,10 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController)
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent // Transparent background to let gradient show
             ), // Avoid excessive padding, set to 0
+            enabled = !isLoading
         ) {
             Text(
-                text = "Log In",
+                text = if(isLoading) "Loading..." else "Log In",
                 style = TextStyle(fontSize = 20.sp, color = Color.Black)
             )
         }
