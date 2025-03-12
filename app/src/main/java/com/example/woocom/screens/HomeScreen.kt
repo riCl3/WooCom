@@ -35,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,7 +108,7 @@ fun HomeScreen(modifier: Modifier=Modifier, navController: NavHostController) {
         Scaffold(
             bottomBar = {
                 NavigationBar(
-                    containerColor = Color(0xFFD4FF9F),
+                    containerColor = Color.LightGray,
                     modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) // Rounded top corners
                 ) {
                     navItemList.forEachIndexed { index, navItem ->
@@ -130,7 +131,7 @@ fun HomeScreen(modifier: Modifier=Modifier, navController: NavHostController) {
                                 )
                             },
                             colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color.Black // Black indicator when selected
+                                indicatorColor = Color.Gray // Black indicator when selected
                             )
                         )
                     }

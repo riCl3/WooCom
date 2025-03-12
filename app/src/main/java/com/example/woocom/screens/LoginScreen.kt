@@ -19,6 +19,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -92,28 +93,29 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
             value = email,
             onValueChange = { email = it },
             leadingIcon = {
-                // Set the leading icon and tint it green
                 Icon(
                     imageVector = Icons.Default.Email,
                     contentDescription = "Email Icon",
-                    tint = Color(0xFFB7FF00) // Green color for the icon
+                    tint = Color(0xFFB7FF00)
                 )
             },
             modifier = Modifier
-                .fillMaxWidth() // This makes the TextField take up the full width of its parent
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.Black, // Unfocused border color is black
-                cursorColor = Color(0xFFB7FF00) // Cursor color is green
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFB7FF00),
+                unfocusedBorderColor = Color.Black,
+                cursorColor = Color(0xFFB7FF00)
             ),
             label = {
                 Text(
                     text = "Email",
-                    style = TextStyle(color = Color.Black) // Label color black
+                    style = TextStyle(color = Color.Black)
                 )
-            }
+            },
+            singleLine = true
         )
+
 
 
 
@@ -125,31 +127,30 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
             value = password,
             onValueChange = { password = it },
             leadingIcon = {
-                // Set the leading icon and tint it green
                 Icon(
                     imageVector = Icons.Default.Lock,
                     contentDescription = "Lock Icon",
-                    tint = Color(0xFFB7FF00) // Green color for the icon
+                    tint = Color(0xFFB7FF00)
                 )
             },
             modifier = Modifier
-                .fillMaxWidth() // This makes the TextField take up the full width of its parent
+                .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .onFocusChanged {
-                    // Optional: Handle focus changes here
-                },
-            colors = TextFieldDefaults.outlinedTextFieldColors(
-                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.Black, // Unfocused border color is black
-                cursorColor = Color(0xFFB7FF00) // Cursor color is green
+                .onFocusChanged {},
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFFB7FF00),
+                unfocusedBorderColor = Color.Black,
+                cursorColor = Color(0xFFB7FF00)
             ),
             label = {
                 Text(
                     text = "Password",
-                    style = TextStyle(color = Color.Black) // Label color black
+                    style = TextStyle(color = Color.Black)
                 )
-            }
+            },
+            singleLine = true
         )
+
 
         Spacer(modifier = Modifier.height(8.dp))
 
