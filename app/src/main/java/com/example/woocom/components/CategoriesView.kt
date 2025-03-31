@@ -1,5 +1,6 @@
 package com.example.woocom.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.woocom.GlobalNavigation
 import com.example.woocom.model.CategoryModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -61,7 +63,10 @@ fun CategoryItem(category: CategoryModel) {
     Card(
         modifier = Modifier
             .size(90.dp)
-            .padding(4.dp),
+            .padding(4.dp)
+            .clickable {
+                GlobalNavigation.navController.navigate("category-products/"+category.id)
+            },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.elevatedCardElevation(4.dp)
     ) {
