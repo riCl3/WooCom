@@ -77,7 +77,7 @@ fun HomeScreen(modifier: Modifier=Modifier, navController: NavHostController) {
                 .background(
                     Brush.horizontalGradient(
                         colors=listOf(
-                            Color(0xFFB7FF00), // Green color
+                             Color(0xFFB7FF00), // Green color
                             Color(0xFFB7FF00)  // Lighter green color
                         )
                     )
