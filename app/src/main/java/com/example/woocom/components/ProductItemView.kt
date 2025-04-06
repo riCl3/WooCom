@@ -38,12 +38,17 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.woocom.GlobalNavigation
 import com.example.woocom.model.ProductModel
+
 @Composable
 fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
     val discount = calculateDiscount(product.actualPrice, product.price)
 
     androidx.compose.material3.Card(
-        modifier = modifier.padding(8.dp),
+        modifier = modifier
+            .padding(8.dp)
+            .clickable {
+                GlobalNavigation.navController.navigate("product-details/${product.id}")
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -52,23 +57,20 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth()
-        ){
+        ) {
             // Product image with discount badge overlay
             Box(
                 modifier = Modifier
-                    .height(120.dp)
+                    .height(170.dp)
                     .fillMaxWidth()
             ) {
-                // Product image
                 AsyncImage(
                     model = product.images.firstOrNull(),
                     contentDescription = product.title,
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
 
-                // Discount badge positioned on top right corner of the image
                 if (discount > 0) {
                     Surface(
                         modifier = Modifier
@@ -94,21 +96,23 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth(),
+                style = MaterialTheme.typography.bodyLarge
             )
+
+            Spacer(modifier = Modifier.height(4.dp)) // ✅ Reduced spacing here
 
             // Price and cart row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(top = 0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Price section
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "₹${product.price}",
                         style = MaterialTheme.typography.titleMedium,
@@ -127,19 +131,28 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
                     }
                 }
 
-                // Cart button
-                IconButton(
-                    onClick = {/*Do Something*/}
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.ShoppingCart,
-                        contentDescription = "Add to Cart"
+                        contentDescription = "Add to Cart",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.Black
                     )
                 }
             }
         }
     }
 }
+
+
 
 private fun calculateDiscount(actualPrice: String, discountPrice: String): Int {
     return try {
