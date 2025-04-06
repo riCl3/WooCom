@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,47 +42,50 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
 @Composable
-    fun CategoryProductsPage(modifier: Modifier=Modifier, navController: NavHostController, categoryId: String) {
+fun CategoryProductsPage(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    categoryId: String
+) {
+    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
 
-        var productList by remember { mutableStateOf(listOf<ProductModel>()) }
-
-        LaunchedEffect(Unit) {
-            Firebase.firestore.collection("data")
-                .document("stock")
-                .collection("products")
-                .whereEqualTo("category",categoryId)
-                .get().addOnCompleteListener(){
-                    if(it.isSuccessful){
-                        val resultList = it.result.documents.mapNotNull { doc ->
-                            doc.toObject(ProductModel::class.java)
-                        }
-                        productList = resultList
+    LaunchedEffect(Unit) {
+        Firebase.firestore.collection("data")
+            .document("stock")
+            .collection("products")
+            .whereEqualTo("category", categoryId)
+            .get().addOnCompleteListener {
+                if (it.isSuccessful) {
+                    val resultList = it.result.documents.mapNotNull { doc ->
+                        doc.toObject(ProductModel::class.java)
                     }
+                    productList = resultList
                 }
-        }
+            }
+    }
 
-        LazyColumn(
-            modifier = Modifier.padding(top = 26.dp),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp,
-            )
-        ) {
-            items(productList.chunked(2)) { rowItems ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    rowItems.forEach { product ->
-                        ProductItemView(
-                            product = product,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    // Handle odd number of items
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
+    LazyColumn(
+        modifier = Modifier.padding(top = 26.dp),
+        contentPadding = PaddingValues(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(productList.chunked(2)) { rowItems ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                rowItems.forEach { product ->
+                    ProductItemView(
+                        product = product,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(280.dp) // Fixed height for consistent layout
+                    )
+                }
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }
     }
+}

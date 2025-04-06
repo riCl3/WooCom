@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.woocom.pages.CategoryProductsPage
+import com.example.woocom.pages.ProductDetailsPage
 import com.example.woocom.screens.AuthScreen
 import com.example.woocom.screens.HomeScreen
 import com.example.woocom.screens.LoginScreen
@@ -37,6 +38,10 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable("category-products/{categoryId}"){
             var categoryId = it.arguments?.getString("categoryId")
             CategoryProductsPage(modifier,navController,categoryId?:"")
+        }
+        composable("product-details/{productId}"){
+            var productId = it.arguments?.getString("productId")
+            ProductDetailsPage(modifier,productId?:"")
         }
     }
 }
