@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ShoppingCart
@@ -30,18 +30,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.woocom.AppUtil
 import com.example.woocom.GlobalNavigation
 import com.example.woocom.model.ProductModel
 
 @Composable
 fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
     val discount = calculateDiscount(product.actualPrice, product.price)
+    val context = LocalContext.current
 
     androidx.compose.material3.Card(
         modifier = modifier
@@ -143,7 +146,10 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
                     Icon(
                         imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = "Add to Cart",
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(20.dp)
+                            .clickable {
+                                AppUtil.addToCart(productId = product.id, context = context)
+                            },
                         tint = Color.Black
                     )
                 }

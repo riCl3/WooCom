@@ -1,5 +1,6 @@
 package com.example.woocom.pages
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -16,10 +17,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
+import com.example.woocom.AppUtil
 import com.example.woocom.model.ProductModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
@@ -47,7 +49,7 @@ val FavoriteRed = Color(0xFFE91E63)
 fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
     var product by remember { mutableStateOf<ProductModel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-
+    var context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
         Firebase.firestore
             .collection("data")
@@ -103,6 +105,7 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
 fun ProductContent(product: ProductModel, modifier: Modifier = Modifier) {
     // Add a ScrollState to make content scrollable
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     Column(
         modifier = modifier
@@ -231,7 +234,9 @@ fun ProductContent(product: ProductModel, modifier: Modifier = Modifier) {
         // Add to cart button using the provided style
         GreenButton(
             text = "Add to Cart",
-            onClick = { /* TODO: Add to cart functionality */ },
+            onClick = {
+                AppUtil.addToCart(productId = product.id, context = context)
+            },
             isLoading = false,
             modifier = Modifier.fillMaxWidth()
         )
@@ -250,24 +255,26 @@ fun GreenButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier
-            .height(56.dp)
-            .border(1.dp, Color.Black)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp) // Added padding to ensure text is inside the button
+            .height(56.dp) // Set a height for the button
+            .border(1.dp, Color.Black) // Border color
             .background(
                 Brush.horizontalGradient(
                     colors = listOf(
-                        GreenPrimary,
-                        GreenPrimary
+                        Color(0xFFB7FF00), // Green color
+                        Color(0xFFB7FF00)  // Lighter green color
                     )
                 )
             ),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent
-        ),
+            containerColor = Color.Transparent // Transparent background to let gradient show
+        ), // Avoid excessive padding, set to 0
         enabled = !isLoading
     ) {
         Text(
-            text = if (isLoading) "Loading..." else text,
+            text = if(isLoading) "Loading..." else "Add to Cart",
             style = TextStyle(fontSize = 20.sp, color = Color.Black)
         )
     }
