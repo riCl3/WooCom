@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,11 +53,9 @@ import com.google.firebase.auth.auth
 fun HomeScreen(modifier: Modifier=Modifier, navController: NavHostController) {
     var isLoading by remember { mutableStateOf(false) }
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(8.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier=Modifier
+            .fillMaxSize(),
+        horizontalAlignment=Alignment.CenterHorizontally
     ) {
         /*
         Text("Home Screen")
@@ -96,49 +95,54 @@ fun HomeScreen(modifier: Modifier=Modifier, navController: NavHostController) {
         */
 
         //NavItem List
-        val navItemList = listOf(
+        val navItemList=listOf(
             NavItem("Home", Icons.Default.Home),
             NavItem("Favorite", Icons.Default.Favorite),
             NavItem("Cart", Icons.Default.ShoppingCart),
             NavItem("Profile", Icons.Default.Person),
         )
 
-        var selectedIndex = remember { mutableStateOf(0) }
+        var selectedIndex by rememberSaveable { mutableStateOf(0) }
         //Bottom Navigation Bar
         Scaffold(
-            bottomBar = {
+            bottomBar={
                 NavigationBar(
-                    containerColor = Color.LightGray,
-                    modifier = Modifier.clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)) // Rounded top corners
+                    containerColor=Color.LightGray,
+                    modifier=Modifier.clip(
+                        RoundedCornerShape(
+                            topStart=20.dp,
+                            topEnd=20.dp
+                        )
+                    ) // Rounded top corners
                 ) {
                     navItemList.forEachIndexed { index, navItem ->
                         NavigationBarItem(
-                            selected = index == selectedIndex.value,
-                            onClick = {
-                                selectedIndex.value = index
+                            selected=index == selectedIndex,
+                            onClick={
+                                selectedIndex=index
                             },
-                            icon = {
+                            icon={
                                 Icon(
-                                    imageVector = navItem.icon,
-                                    contentDescription = navItem.label,
-                                    tint = if (index == selectedIndex.value) Color.White else Color.Black // Selected: White, Unselected: Black
+                                    imageVector=navItem.icon,
+                                    contentDescription=navItem.label,
+                                    tint=if (index == selectedIndex) Color.White else Color.Black // Selected: White, Unselected: Black
                                 )
                             },
-                            label = {
+                            label={
                                 Text(
-                                    text = navItem.label,
-                                    color = Color.Black // Selected: White, Unselected: Black
+                                    text=navItem.label,
+                                    color=Color.Black // Selected: White, Unselected: Black
                                 )
                             },
-                            colors = NavigationBarItemDefaults.colors(
-                                indicatorColor = Color.Gray // Black indicator when selected
+                            colors=NavigationBarItemDefaults.colors(
+                                indicatorColor=Color.Gray // Black indicator when selected
                             )
                         )
                     }
                 }
             }
         ) {
-            ContentScreen(modifier = Modifier.padding(it), selectedIndex.value)
+            ContentScreen(modifier=Modifier.padding(it), selectedIndex)
         }
 
     }
@@ -153,6 +157,7 @@ fun ContentScreen(modifier: Modifier=Modifier, selectedIndex: Int) {
         3 -> ProfilePage(modifier)
     }
 }
+
 
 data class NavItem(
     val label: String,

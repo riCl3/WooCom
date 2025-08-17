@@ -1,0 +1,12 @@
+[33m03dbd84[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mCategoryScreen[m[33m, [m[1;31morigin/CategoryScreen[m[33m)[m Cart Page Update. Cart Item View Created.
+[33m92f04c5[m Product Details Page Integration. UI bug fix in Product Item View.
+[33m3b9f36c[m Integration of ProductsItemView file
+[33m5acdd49[m[33m ([m[1;32mHomeScreen[m[33m)[m Integration of ProductsItemView file
+[33m503eae1[m[33m ([m[1;31morigin/HomeScreen[m[33m)[m Added Categories, Integration of Lazy Columns
+[33m8b4b9ac[m Home Screen Updates, Banner initialization and BottomNavigationBar UI Changes
+[33m4ddab01[m HomeScreen Initialization and Bottom NavigationBar
+[33m6abf279[m[33m ([m[1;31morigin/sign_log_screen[m[33m, [m[1;32msign_log_screen[m[33m)[m Log In Sign In and Log Out Function Integrated, also Introduced HomeScren
+[33m5de6e4a[m Sign Up Screen Auth Set Up & Firestrore Integration
+[33md7ec1e9[m login and sign up screen initialization (not designed)
+[33m1958b90[m[33m ([m[1;31mgithub/master[m[33m, [m[1;32mmaster[m[33m)[m initialization master branching
+[33md8c195e[m[33m ([m[1;31morigin/master[m[33m)[m initialization master branching

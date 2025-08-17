@@ -4,8 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -239,7 +237,7 @@ fun parsePrice(priceString: String): Double {
     }
 }
 
-private fun updateCartQuantity(productId: String, quantity: Long) {
+fun updateCartQuantity(productId: String, quantity: Long) {
     val userDoc = Firebase.firestore.collection("user")
         .document(FirebaseAuth.getInstance().currentUser?.uid!!)
 

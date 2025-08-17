@@ -29,6 +29,10 @@ class AuthViewModel : ViewModel()  {
             .addOnCompleteListener {
                 if (it.isSuccessful){
                     var userId = it.result?.user?.uid
+                    if (userId==null){
+                        onResult(false,"User ID is null")
+                        return@addOnCompleteListener
+                    }
                     val usermodel = UserModel(name,email,userId!!)
                     firestore.collection("user").document(userId)
                         .set(usermodel)

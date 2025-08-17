@@ -65,7 +65,8 @@ fun BannerView(modifier: Modifier = Modifier) {
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        // Reduce this spacing or remove it completely
+        Spacer(modifier = Modifier.height(4.dp)) // Changed from 10.dp to 4.dp
 
         DotsIndicator(
             dotCount = bannerList.size,
