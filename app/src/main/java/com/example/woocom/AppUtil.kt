@@ -12,29 +12,69 @@ object AppUtil {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
-
     fun addToCart(productId: String, context: Context){
         val userDoc = Firebase.firestore.collection("user")
             .document(FirebaseAuth.getInstance().currentUser?.uid!!)
 
         userDoc.get().addOnCompleteListener {
             if(it.isSuccessful){
-              val currentCart = it.result.get("cartItems") as? Map<String,Long> ?: emptyMap()
-                //Check if current quantity is initialized or not, if not, initialize with 0
+                val currentCart = it.result.get("cartItems") as? Map<String,Long> ?: emptyMap()
                 val currentQuantity = currentCart[productId]?:0
                 val updatedQuantity = currentQuantity + 1
-                //Updating the quantity
+
                 val updatedCart = mapOf("cartItems.$productId" to updatedQuantity)
-                //Push this updated quantity to Firebase
+
                 userDoc.update(updatedCart)
-                    .addOnCompleteListener {
-                        if(it.isSuccessful){
+                    .addOnCompleteListener { task ->
+                        if(task.isSuccessful){
                             showToast(context, "Item added to cart")
                         }else{
                             showToast(context, "Failed to add item to cart")
                         }
                     }
             }
+        }
+    }
+
+    fun addToFavorites(productId: String, context: Context) {
+        val userDoc = Firebase.firestore.collection("user")
+            .document(FirebaseAuth.getInstance().currentUser?.uid!!)
+
+        val update = mapOf("favorites.$productId" to true)
+
+        userDoc.update(update).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                showToast(context, "Added to favorites")
+            } else {
+                showToast(context, "Failed to add to favorites")
+            }
+        }
+    }
+
+    fun removeFromFavorites(productId: String, context: Context) {
+        val userDoc = Firebase.firestore.collection("user")
+            .document(FirebaseAuth.getInstance().currentUser?.uid!!)
+
+        val update = mapOf("favorites.$productId" to null) // removes the field
+
+        userDoc.update(update).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                showToast(context, "Removed from favorites")
+            } else {
+                showToast(context, "Failed to remove from favorites")
+            }
+        }
+    }
+
+    fun isFavorite(productId: String, context: Context, callback: (Boolean) -> Unit) {
+        val userDoc = Firebase.firestore.collection("user")
+            .document(FirebaseAuth.getInstance().currentUser?.uid!!)
+
+        userDoc.get().addOnSuccessListener {
+            val favorites = it.get("favorites") as? Map<String, Boolean> ?: emptyMap()
+            callback(favorites[productId] == true)
+        }.addOnFailureListener {
+            callback(false)
         }
     }
 }

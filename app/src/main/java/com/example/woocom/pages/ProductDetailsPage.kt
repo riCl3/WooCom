@@ -17,7 +17,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,13 +30,14 @@ import coil.compose.AsyncImage
 import com.example.woocom.AppUtil
 import com.example.woocom.model.ProductModel
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import com.tbuonomo.viewpagerdotsindicator.compose.DotsIndicator
 import com.tbuonomo.viewpagerdotsindicator.compose.model.DotGraphic
 import com.tbuonomo.viewpagerdotsindicator.compose.type.ShiftIndicatorType
 import kotlinx.coroutines.delay
 
-// Custom theme colors
 val GreenPrimary = Color(0xFFB7FF00)
 val GreenSecondary = Color(0xFFA5E800)
 val DarkText = Color(0xFF212121)
@@ -49,8 +49,9 @@ val FavoriteRed = Color(0xFFE91E63)
 fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
     var product by remember { mutableStateOf<ProductModel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
-    var context = LocalContext.current
-    LaunchedEffect(key1 = Unit) {
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
         Firebase.firestore
             .collection("data")
             .document("stock")
@@ -71,9 +72,7 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
         topBar = {
             TopAppBar(
                 title = { Text("Product Details", color = DarkText) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         }
     ) { paddingValues ->
@@ -83,19 +82,19 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
                 .fillMaxSize()
                 .background(Color.White)
         ) {
-            if (isLoading) {
-                CircularProgressIndicator(
+            when {
+                isLoading -> CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = GreenPrimary
                 )
-            } else if (product == null) {
-                Text(
+
+                product == null -> Text(
                     text = "Product not found",
                     modifier = Modifier.align(Alignment.Center),
                     color = DarkText
                 )
-            } else {
-                ProductContent(product = product!!, modifier = modifier)
+
+                else -> ProductContent(product = product!!, modifier = modifier)
             }
         }
     }
@@ -103,24 +102,21 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
 
 @Composable
 fun ProductContent(product: ProductModel, modifier: Modifier = Modifier) {
-    // Add a ScrollState to make content scrollable
     val scrollState = rememberScrollState()
     val context = LocalContext.current
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(scrollState) // Add vertical scroll
+            .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        // Images first as requested
         if (product.images.isNotEmpty()) {
-            ImageCarouselWithFavorite(images = product.images)
+            ImageCarouselWithFavorite(images = product.images, productId = product.id)
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Title and price below images
         Text(
             text = product.title,
             fontSize = 24.sp,
@@ -130,7 +126,6 @@ fun ProductContent(product: ProductModel, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Price information
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "₹${product.price}",
@@ -151,98 +146,44 @@ fun ProductContent(product: ProductModel, modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Product Overview - Show this section even if empty for debugging
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = LightGray
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Overview",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkText
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                if (product.otherDetails.isEmpty()) {
-                    Text(
-                        text = "No details available",
-                        fontSize = 16.sp,
-                        color = Color.Gray
-                    )
-                } else {
-                    product.otherDetails.forEach { (key, value) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "$key:",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DarkText
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            Text(
-                                text = value.toString(),
-                                fontSize = 16.sp,
-                                color = DarkText
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        InfoCard(title = "Overview", content = product.otherDetails.map { "${it.key}: ${it.value}" })
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Product Description
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = LightGray
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Description",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkText
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = product.description.ifEmpty { "No description available" },
-                    fontSize = 16.sp,
-                    color = DarkText
-                )
-            }
-        }
+        InfoCard(title = "Description", content = listOf(product.description.ifEmpty { "No description available" }))
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Add to cart button using the provided style
         GreenButton(
             text = "Add to Cart",
-            onClick = {
-                AppUtil.addToCart(productId = product.id, context = context)
-            },
+            onClick = { AppUtil.addToCart(productId = product.id, context = context) },
             isLoading = false,
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Add extra space at the bottom for better scrolling experience
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+fun InfoCard(title: String, content: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = LightGray),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkText
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            content.forEach {
+                Text(text = it, fontSize = 16.sp, color = DarkText, modifier = Modifier.padding(vertical = 4.dp))
+            }
+        }
     }
 }
 
@@ -255,37 +196,37 @@ fun GreenButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp) // Added padding to ensure text is inside the button
-            .height(56.dp) // Set a height for the button
-            .border(1.dp, Color.Black) // Border color
-            .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFFB7FF00), // Green color
-                        Color(0xFFB7FF00)  // Lighter green color
-                    )
-                )
-            ),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent // Transparent background to let gradient show
-        ), // Avoid excessive padding, set to 0
+        modifier = modifier
+            .padding(horizontal = 16.dp)
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
         enabled = !isLoading
     ) {
         Text(
-            text = if(isLoading) "Loading..." else "Add to Cart",
+            text = if (isLoading) "Loading..." else text,
             style = TextStyle(fontSize = 20.sp, color = Color.Black)
         )
     }
 }
 
 @Composable
-fun ImageCarouselWithFavorite(images: List<String>) {
+fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
     val pagerState = rememberPagerState(pageCount = { images.size })
+    val context = LocalContext.current
     var isFavorite by remember { mutableStateOf(false) }
 
-    // Auto-scrolling effect
+    // Load initial favorite state from Firestore
+    LaunchedEffect(productId) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
+        Firebase.firestore.collection("user")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { doc ->
+                val favs = doc.get("favorites") as? Map<*, *>
+                isFavorite = favs?.containsKey(productId) == true
+            }
+    }
+
     LaunchedEffect(Unit) {
         while (true) {
             delay(4000)
@@ -296,18 +237,12 @@ fun ImageCarouselWithFavorite(images: List<String>) {
         }
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             HorizontalPager(
                 state = pagerState,
                 pageSpacing = 16.dp,
-                modifier = Modifier.height(450.dp) // Increased height as requested
+                modifier = Modifier.height(450.dp)
             ) { page ->
                 Card(
                     modifier = Modifier
@@ -316,14 +251,12 @@ fun ImageCarouselWithFavorite(images: List<String>) {
                     shape = RoundedCornerShape(16.dp),
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
-                    Box {
-                        AsyncImage(
-                            model = images[page],
-                            contentDescription = "Product image ${page + 1}",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    }
+                    AsyncImage(
+                        model = images[page],
+                        contentDescription = "Product image ${page + 1}",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
 
@@ -332,17 +265,29 @@ fun ImageCarouselWithFavorite(images: List<String>) {
             DotsIndicator(
                 dotCount = images.size,
                 type = ShiftIndicatorType(
-                    dotsGraphic = DotGraphic(
-                        color = Color.DarkGray
-                    )
+                    dotsGraphic = DotGraphic(color = Color.DarkGray)
                 ),
                 pagerState = pagerState
             )
         }
 
-        // Favorite button at the bottom right corner of the image
         IconButton(
-            onClick = { isFavorite = !isFavorite },
+            onClick = {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                if (uid != null) {
+                    val userDoc = Firebase.firestore.collection("user").document(uid)
+                    if (isFavorite) {
+                        // Remove from favorites
+                        userDoc.update("favorites.$productId", FieldValue.delete())
+                        AppUtil.showToast(context, "Removed from favorites")
+                    } else {
+                        // Add to favorites
+                        userDoc.update("favorites.$productId", true)
+                        AppUtil.showToast(context, "Added to favorites")
+                    }
+                    isFavorite = !isFavorite
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 24.dp, bottom = 80.dp)
