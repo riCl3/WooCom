@@ -83,11 +83,12 @@ fun FavoritePage(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Favorites") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                title = { Text("Favorites", color = Color.White) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
+        com.example.woocom.components.PremiumBackground {
         Box(
             modifier = modifier
                 .padding(padding)
@@ -122,6 +123,7 @@ fun FavoritePage(modifier: Modifier = Modifier) {
             }
         }
     }
+    }
 }
 
 @Composable
@@ -141,8 +143,9 @@ private fun FavoriteItemCard(
     Card(
         modifier = Modifier
             .fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = com.example.woocom.ui.theme.CardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, com.example.woocom.ui.theme.NeonBorder),
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -155,7 +158,7 @@ private fun FavoriteItemCard(
                 modifier = Modifier
                     .size(84.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF0F0F0))
+                    .background(Color.White)
             ) {
                 AsyncImage(
                     model = product.images.firstOrNull(),
@@ -168,9 +171,9 @@ private fun FavoriteItemCard(
             Spacer(Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(product.title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                Text(product.title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 Spacer(Modifier.height(4.dp))
-                Text("₹${product.price}", fontSize = 14.sp, color = Color.Black)
+                Text("₹${product.price}", fontSize = 14.sp, color = com.example.woocom.ui.theme.GreenPrimary)
             }
 
             IconButton(

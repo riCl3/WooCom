@@ -36,12 +36,14 @@ import com.google.firebase.firestore.firestore
 import com.tbuonomo.viewpagerdotsindicator.compose.DotsIndicator
 import com.tbuonomo.viewpagerdotsindicator.compose.model.DotGraphic
 import com.tbuonomo.viewpagerdotsindicator.compose.type.ShiftIndicatorType
+import com.example.woocom.components.GlassCard
+import com.example.woocom.components.NeonGlassCard
 import kotlinx.coroutines.delay
 
 val GreenPrimary = Color(0xFFB7FF00)
 val GreenSecondary = Color(0xFFA5E800)
-val DarkText = Color(0xFF212121)
-val LightGray = Color(0xFFEEEEEE)
+val DarkText = Color.White
+val LightGray = com.example.woocom.ui.theme.CardSurface
 val FavoriteRed = Color(0xFFE91E63)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,19 +70,24 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
             }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Product Details", color = DarkText) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        }
+    com.example.woocom.components.PremiumBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = { Text("Product Details", color = DarkText) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        navigationIconContentColor = Color.White,
+                        actionIconContentColor = Color.White
+                    )
+                )
+            }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .background(Color.White)
         ) {
             when {
                 isLoading -> CircularProgressIndicator(
@@ -96,8 +103,9 @@ fun ProductDetailsPage(modifier: Modifier = Modifier, productId: String) {
 
                 else -> ProductContent(product = product!!, modifier = modifier)
             }
-        }
     }
+}
+}
 }
 
 @Composable
@@ -167,9 +175,8 @@ fun ProductContent(product: ProductModel, modifier: Modifier = Modifier) {
 
 @Composable
 fun InfoCard(title: String, content: List<String>) {
-    Card(
+    NeonGlassCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = LightGray),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -244,12 +251,11 @@ fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
                 pageSpacing = 16.dp,
                 modifier = Modifier.height(450.dp)
             ) { page ->
-                Card(
+                GlassCard(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(4.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(4.dp)
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     AsyncImage(
                         model = images[page],

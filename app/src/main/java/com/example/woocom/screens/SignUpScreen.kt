@@ -56,6 +56,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
     var context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
 
+    com.example.woocom.components.PremiumBackground {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +67,8 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
             text = "Sign", style = TextStyle(
                 fontSize = 60.sp,
                 fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Left
+                textAlign = TextAlign.Left,
+                color = Color.White // Text White
 
             )
         )
@@ -74,7 +76,8 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
             text = "Up", style = TextStyle(
                 fontSize = 60.sp,
                 fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Left
+                textAlign = TextAlign.Left,
+                color = Color.White // Text White
             )
         )
 
@@ -102,14 +105,16 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.Black, // Unfocused border color is black
-                cursorColor = Color(0xFFB7FF00) // Cursor color is green
+                focusedBorderColor = Color(0xFFB7FF00),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFFB7FF00),
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             ),
             label = {
                 Text(
                     text = "Name",
-                    style = TextStyle(color = Color.Black) // Label color black
+                    style = TextStyle(color = Color.White)
                 )
             }
         )
@@ -136,13 +141,15 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                 .padding(horizontal = 16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.Black, // Unfocused border color is black
-                cursorColor = Color(0xFFB7FF00) // Cursor color is green
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFFB7FF00), // Cursor color is green
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             ),
             label = {
                 Text(
                     text = "Email",
-                    style = TextStyle(color = Color.Black) // Label color black
+                    style = TextStyle(color = Color.White) // Label color black
                 )
             }
         )
@@ -172,13 +179,15 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                 },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.Black, // Unfocused border color is black
-                cursorColor = Color(0xFFB7FF00) // Cursor color is green
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFFB7FF00), // Cursor color is green
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             ),
             label = {
                 Text(
                     text = "Password",
-                    style = TextStyle(color = Color.Black) // Label color black
+                    style = TextStyle(color = Color.White) // Label color black
                 )
             }
         )
@@ -210,7 +219,7 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp) // Added padding to ensure text is inside the button
                 .height(56.dp) // Set a height for the button
-                .border(1.dp, Color.Black) // Border color
+                .border(1.dp, com.example.woocom.ui.theme.NeonBorder) // Border color
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
@@ -230,5 +239,6 @@ fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, auth
             )
         }
 
+    }
     }
 }

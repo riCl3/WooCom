@@ -33,11 +33,12 @@ import com.example.woocom.R
 
 @Composable
 fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) {
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center) {
+    com.example.woocom.components.PremiumBackground {
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center) {
       Image(painter = painterResource(id = R.drawable.loginbg),
           contentDescription = "Login",
           modifier = Modifier.fillMaxWidth()
@@ -48,7 +49,8 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) 
                 fontSize = 20.sp,
                 fontFamily = FontFamily.Cursive,
                 fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Color.White // Text White
             ))
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -58,7 +60,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) 
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, Color.Black)
+                .border(1.dp, com.example.woocom.ui.theme.NeonBorder)
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
@@ -86,7 +88,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) 
             // Text before the button
             Text(
                 text = "Don't Have An Account? ",
-                style = TextStyle(fontSize = 16.sp, color = Color.Black) // Basic styling for the label
+                style = TextStyle(fontSize = 16.sp, color = Color.White) // Text White
             )
 
             // TextButton with a darker neon green
@@ -108,6 +110,7 @@ fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) 
                 )
             }
         }
+    }
     }
 
 

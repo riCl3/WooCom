@@ -20,10 +20,33 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.woocom.GlobalNavigation
 import com.example.woocom.model.ProductModel
+import com.example.woocom.components.GlassCard
+import com.example.woocom.components.NeonGlassCard
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
 import kotlin.random.Random
+
+import androidx.compose.ui.graphics.Brush
+import com.example.woocom.ui.theme.GradientStart
+import com.example.woocom.ui.theme.GradientEnd
+
+@Composable
+fun PremiumBackground(
+    content: @Composable BoxScope.() -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(GradientStart, GradientEnd)
+                )
+            )
+    ) {
+        content()
+    }
+}
 
 // Deals of the Day Component
 @Composable
@@ -46,6 +69,7 @@ fun DealsOfTheDayView(modifier: Modifier = Modifier) {
     }
 
     LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(productList) { item ->
@@ -67,15 +91,14 @@ fun DealProductItem(product: ProductModel) {
         Random.nextInt(10, 50) // Random discount for demo
     }
 
-    Card(
+    NeonGlassCard(
         modifier = Modifier
             .width(160.dp)
             .height(220.dp)
             .clickable {
                 GlobalNavigation.navController.navigate("product-details/${product.id}")
             },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.elevatedCardElevation(6.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
@@ -94,7 +117,8 @@ fun DealProductItem(product: ProductModel) {
                 text = product.title,
                 style = TextStyle(
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White // Title White
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -106,9 +130,8 @@ fun DealProductItem(product: ProductModel) {
                 Text(
                     text = "₹${product.price}",
                     style = TextStyle(
-                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFF4D00)
+                        color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
                     )
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -136,7 +159,7 @@ fun DealProductItem(product: ProductModel) {
                     ),
                     modifier = Modifier
                         .background(
-                            Color(0xFFFF4D00),
+                            com.example.woocom.ui.theme.PriceRed, // Requested: Red/Orange
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 2.dp)
@@ -167,6 +190,7 @@ fun FeaturedProductsView(modifier: Modifier = Modifier) {
     }
 
     LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(productList) { item ->
@@ -179,15 +203,14 @@ fun FeaturedProductsView(modifier: Modifier = Modifier) {
 fun FeaturedProductItem(product: ProductModel) {
     val randomRating = remember { Random.nextDouble(3.5, 5.0) }
 
-    Card(
+    GlassCard(
         modifier = Modifier
             .width(140.dp)
             .height(180.dp)
             .clickable {
                 GlobalNavigation.navController.navigate("product-details/${product.id}")
             },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.elevatedCardElevation(4.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
@@ -206,7 +229,8 @@ fun FeaturedProductItem(product: ProductModel) {
                 text = product.title,
                 style = TextStyle(
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White // Title White
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -219,7 +243,7 @@ fun FeaturedProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
                 )
             )
 
@@ -263,6 +287,7 @@ fun RecentlyViewedView(modifier: Modifier = Modifier) {
     }
 
     LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(productList) { item ->
@@ -273,15 +298,14 @@ fun RecentlyViewedView(modifier: Modifier = Modifier) {
 
 @Composable
 fun RecentlyViewedItem(product: ProductModel) {
-    Card(
+    NeonGlassCard(
         modifier = Modifier
             .width(100.dp)
             .height(140.dp)
             .clickable {
                 GlobalNavigation.navController.navigate("product-details/${product.id}")
             },
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.elevatedCardElevation(2.dp)
+        shape = RoundedCornerShape(8.dp)
     ) {
         Column(
             modifier = Modifier.padding(6.dp)
@@ -300,7 +324,8 @@ fun RecentlyViewedItem(product: ProductModel) {
                 text = product.title,
                 style = TextStyle(
                     fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -313,7 +338,7 @@ fun RecentlyViewedItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
                 )
             )
         }
@@ -341,6 +366,7 @@ fun RecommendedView(modifier: Modifier = Modifier) {
     }
 
     LazyRow(
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(productList) { item ->
@@ -353,15 +379,14 @@ fun RecommendedView(modifier: Modifier = Modifier) {
 fun RecommendedProductItem(product: ProductModel) {
     val randomRating = remember { Random.nextDouble(4.0, 5.0) }
 
-    Card(
+    GlassCard(
         modifier = Modifier
             .width(150.dp)
             .height(190.dp)
             .clickable {
                 GlobalNavigation.navController.navigate("product-details/${product.id}")
             },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.elevatedCardElevation(4.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
@@ -380,7 +405,8 @@ fun RecommendedProductItem(product: ProductModel) {
                 text = product.title,
                 style = TextStyle(
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = Color.White // Title White
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -393,7 +419,7 @@ fun RecommendedProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
                 )
             )
 
@@ -423,11 +449,11 @@ fun RecommendedProductItem(product: ProductModel) {
                     style = TextStyle(
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.Black // Black text on Neon Green
                     ),
                     modifier = Modifier
                         .background(
-                            Color.Green,
+                            Color(0xFFB7FF00), // Neon Green
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 4.dp, vertical = 1.dp)

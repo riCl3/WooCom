@@ -56,6 +56,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
     var isLoading by remember { mutableStateOf(false) }
     var context = LocalContext.current
 
+    com.example.woocom.components.PremiumBackground {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,7 +67,8 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
             text = "Welcome", style = TextStyle(
                 fontSize = 60.sp,
                 fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Left
+                textAlign = TextAlign.Left,
+                color = Color.White // Text White
 
             )
         )
@@ -74,7 +76,8 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
             text = "Back", style = TextStyle(
                 fontSize = 60.sp,
                 fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Left
+                textAlign = TextAlign.Left,
+                color = Color.White // Text White
             )
         )
 
@@ -104,13 +107,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                 .padding(horizontal = 16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFB7FF00),
-                unfocusedBorderColor = Color.Black,
-                cursorColor = Color(0xFFB7FF00)
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFFB7FF00),
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             ),
             label = {
                 Text(
                     text = "Email",
-                    style = TextStyle(color = Color.Black)
+                    style = TextStyle(color = Color.White)
                 )
             },
             singleLine = true
@@ -139,13 +144,15 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                 .onFocusChanged {},
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFB7FF00),
-                unfocusedBorderColor = Color.Black,
-                cursorColor = Color(0xFFB7FF00)
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFFB7FF00),
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             ),
             label = {
                 Text(
                     text = "Password",
-                    style = TextStyle(color = Color.Black)
+                    style = TextStyle(color = Color.White)
                 )
             },
             singleLine = true
@@ -181,7 +188,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp) // Added padding to ensure text is inside the button
                 .height(56.dp) // Set a height for the button
-                .border(1.dp, Color.Black) // Border color
+                .border(1.dp, com.example.woocom.ui.theme.NeonBorder) // Border color
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
@@ -201,5 +208,6 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavHostController,
             )
         }
 
+    }
     }
 }

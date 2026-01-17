@@ -3,6 +3,7 @@ package com.example.woocom.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -105,44 +106,38 @@ fun HomeScreen(modifier: Modifier=Modifier, navController: NavHostController) {
         var selectedIndex by rememberSaveable { mutableStateOf(0) }
         //Bottom Navigation Bar
         Scaffold(
-            bottomBar={
-                NavigationBar(
-                    containerColor=Color.LightGray,
-                    modifier=Modifier.clip(
-                        RoundedCornerShape(
-                            topStart=20.dp,
-                            topEnd=20.dp
-                        )
-                    ) // Rounded top corners
-                ) {
-                    navItemList.forEachIndexed { index, navItem ->
-                        NavigationBarItem(
-                            selected=index == selectedIndex,
-                            onClick={
-                                selectedIndex=index
-                            },
-                            icon={
-                                Icon(
-                                    imageVector=navItem.icon,
-                                    contentDescription=navItem.label,
-                                    tint=if (index == selectedIndex) Color.White else Color.Black // Selected: White, Unselected: Black
-                                )
-                            },
-                            label={
-                                Text(
-                                    text=navItem.label,
-                                    color=Color.Black // Selected: White, Unselected: Black
-                                )
-                            },
-                            colors=NavigationBarItemDefaults.colors(
-                                indicatorColor=Color.Gray // Black indicator when selected
+            containerColor = Color.Transparent // Ensure background shows through
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                com.example.woocom.ui.theme.GradientStart,
+                                com.example.woocom.ui.theme.GradientEnd
                             )
                         )
-                    }
+                    ) // Dark Grey to Deep Green Gradient
+                    .padding(paddingValues) // Respect system bars if any
+            ) {
+                // Content Layer
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 76.dp) // Leave space for floating nav bar
+                ) {
+                    ContentScreen(modifier = Modifier, selectedIndex)
                 }
+
+                // Floating Glass Navigation
+                com.example.woocom.components.GlassBottomNavigation(
+                    navItems = navItemList,
+                    selectedIndex = selectedIndex,
+                    onItemSelected = { selectedIndex = it },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
-        ) {
-            ContentScreen(modifier=Modifier.padding(it), selectedIndex)
         }
 
     }

@@ -1,6 +1,6 @@
 package com.example.woocom.components
 
-import androidx.compose.material3.TextFieldDefaults
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,8 +32,18 @@ fun BannerView(modifier: Modifier = Modifier) {
     LaunchedEffect(Unit) {
         Firebase.firestore.collection("data")
             .document("banner")
-            .get().addOnCompleteListener() {
-                bannerList = it.result.get("urls") as List<String>
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful && task.result != null) {
+                    try {
+                        val urls = task.result.get("urls") as? List<String>
+                        bannerList = urls ?: emptyList()
+                    } catch (e: Exception) {
+                        Log.e("BannerView", "Data mapping error: ${e.message}")
+                    }
+                } else {
+                    Log.e("BannerView", "Firestore error: ${task.exception?.message}")
+                }
             }
     }
 
@@ -44,20 +52,19 @@ fun BannerView(modifier: Modifier = Modifier) {
             bannerList.size
         }
 
-        // Add this LaunchedEffect for auto-scrolling every 4 seconds
-        LaunchedEffect(Unit) {
-            while (true) {
-                kotlinx.coroutines.delay(4000) // Wait for 4 seconds
-                if (bannerList.isNotEmpty()) {
+        LaunchedEffect(bannerList) {
+            if (bannerList.isNotEmpty()) {
+                while (true) {
+                    kotlinx.coroutines.delay(4000)
                     val nextPage = (pagerState.currentPage + 1) % bannerList.size
                     pagerState.animateScrollToPage(nextPage)
                 }
             }
         }
 
-        HorizontalPager(state = pagerState, pageSpacing = 24.dp) {
+        HorizontalPager(state = pagerState, pageSpacing = 24.dp) { index ->
             AsyncImage(
-                model = bannerList.getOrNull(it),
+                model = bannerList.getOrNull(index),
                 contentDescription = "Banner Page",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -65,13 +72,14 @@ fun BannerView(modifier: Modifier = Modifier) {
             )
         }
 
-        // Reduce this spacing or remove it completely
-        Spacer(modifier = Modifier.height(4.dp)) // Changed from 10.dp to 4.dp
+        Spacer(modifier = Modifier.height(8.dp))
 
-        DotsIndicator(
-            dotCount = bannerList.size,
-            type = ShiftIndicatorType(dotsGraphic = DotGraphic(color = Color.LightGray)),
-            pagerState = pagerState
-        )
+        if (bannerList.isNotEmpty()) {
+            DotsIndicator(
+                dotCount = bannerList.size,
+                type = ShiftIndicatorType(dotsGraphic = DotGraphic(color = Color.LightGray)),
+                pagerState = pagerState
+            )
+        }
     }
 }
