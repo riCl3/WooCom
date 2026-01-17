@@ -1,10 +1,14 @@
 package com.example.woocom.pages
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -24,27 +28,33 @@ import com.example.woocom.components.RecommendedView
 
 @Composable
 fun HomePage(modifier: Modifier = Modifier) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        HeaderView(Modifier)
+    com.example.woocom.components.PremiumBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding() // Handled by system insets
+                .verticalScroll(rememberScrollState())
+        ) {
+        HeaderView(Modifier.padding(horizontal = 16.dp))
 
         BannerView(modifier)
+
+        Spacer(modifier = Modifier.height(8.dp)) // Small gap between banner and categories
 
         Text(
             text = "Categories",
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+                fontSize = 18.sp,
+                color = Color.White
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        CategoriesView()
+        // CategoriesView handles its own padding or we wrap it
+        CategoriesView(modifier = Modifier.padding(horizontal = 16.dp))
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -53,13 +63,15 @@ fun HomePage(modifier: Modifier = Modifier) {
             text = "🔥 Deals of the Day",
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+                fontSize = 18.sp,
+                color = Color.White
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        DealsOfTheDayView()
+        DealsOfTheDayView(modifier = Modifier.padding(horizontal = 16.dp))
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -68,13 +80,15 @@ fun HomePage(modifier: Modifier = Modifier) {
             text = "⭐ Featured Products",
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+                fontSize = 18.sp,
+                color = Color.White
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        FeaturedProductsView()
+        FeaturedProductsView(modifier = Modifier.padding(horizontal = 16.dp))
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -83,13 +97,15 @@ fun HomePage(modifier: Modifier = Modifier) {
             text = "👀 Recently Viewed",
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+                fontSize = 18.sp,
+                color = Color.White
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        RecentlyViewedView()
+        RecentlyViewedView(modifier = Modifier.padding(horizontal = 16.dp))
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -98,14 +114,17 @@ fun HomePage(modifier: Modifier = Modifier) {
             text = "💡 Recommended for You",
             style = TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+                fontSize = 18.sp,
+                color = Color.White
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        RecommendedView()
+        RecommendedView(modifier = Modifier.padding(horizontal = 16.dp))
 
         Spacer(modifier = Modifier.height(16.dp))
     }
+}
 }

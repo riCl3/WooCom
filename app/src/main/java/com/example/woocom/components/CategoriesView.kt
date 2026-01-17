@@ -32,6 +32,11 @@ import com.example.woocom.model.CategoryModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
+import com.example.woocom.ui.theme.CardSurface
+import com.example.woocom.ui.theme.NeonBorder
+import androidx.compose.foundation.BorderStroke
+import com.example.woocom.components.GlassCard
+import com.example.woocom.components.NeonGlassCard
 
 @Composable
 fun CategoriesView(modifier: Modifier=Modifier) {
@@ -51,7 +56,7 @@ fun CategoriesView(modifier: Modifier=Modifier) {
                 }
             }
     }
-        LazyRow {
+    LazyRow(modifier = modifier) {
             items(categoryList){ item ->
                 CategoryItem(category = item)
             }
@@ -60,30 +65,29 @@ fun CategoriesView(modifier: Modifier=Modifier) {
 
 @Composable
 fun CategoryItem(category: CategoryModel) {
-    Card(
+    NeonGlassCard(
         modifier = Modifier
-            .size(90.dp)
+            .size(110.dp)
             .padding(4.dp)
             .clickable {
                 GlobalNavigation.navController.navigate("category-products/"+category.id)
             },
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.elevatedCardElevation(4.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(4.dp).size(82.dp) // Fill the available space
+            modifier = Modifier.padding(12.dp)
         ) {
             // Image
             AsyncImage(
                 model = category.imageUrl,
-                contentDescription = "Category Image",
-                modifier = Modifier.size(40.dp)
+                contentDescription = null,
+                modifier = Modifier.size(50.dp)
             )
 
             // Spacer between image and text
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Text with specified color and size
             Text(
@@ -91,10 +95,10 @@ fun CategoryItem(category: CategoryModel) {
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = Color.White // Title White
                 ),
-                modifier = Modifier.padding(horizontal = 2.dp),
-                maxLines = 1 // Prevent text from wrapping
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

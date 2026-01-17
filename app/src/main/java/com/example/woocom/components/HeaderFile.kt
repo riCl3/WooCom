@@ -1,5 +1,11 @@
 package com.example.woocom.components
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import com.example.woocom.GlobalNavigation
+
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,17 +31,22 @@ fun HeaderView(modifier: Modifier = Modifier) {
     var searcher by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        FirebaseFirestore.getInstance().collection("user")
-            .document(FirebaseAuth.getInstance().currentUser?.uid ?: "")
-            .get().addOnCompleteListener {
-                name = it.result?.get("name").toString()
-            }
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance().collection("user")
+                .document(uid)
+                .get().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        name = task.result?.get("name").toString()
+                    }
+                }
+        }
     }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 16.dp, start = 4.dp, end = 4.dp),
+        modifier = modifier
+            .fillMaxWidth() // Top padding handled by HomePage statusBarsPadding
+            .padding(top = 8.dp), 
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Column(
@@ -47,7 +58,8 @@ fun HeaderView(modifier: Modifier = Modifier) {
                     fontSize = 30.sp,
                     fontFamily = FontFamily.Cursive,
                     textAlign = TextAlign.Start,
-                    fontWeight = FontWeight.ExtraBold
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White // Dark Mode
                 )
             )
             Text(
@@ -56,7 +68,8 @@ fun HeaderView(modifier: Modifier = Modifier) {
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     fontFamily = FontFamily.SansSerif,
-                    textAlign = TextAlign.Start
+                    textAlign = TextAlign.Start,
+                    color = Color.White // Dark Mode
                 )
             )
         }
@@ -68,27 +81,42 @@ fun HeaderView(modifier: Modifier = Modifier) {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search Icon",
-                    tint = Color.LightGray // Green color for the icon
+                    tint = Color(0xFFB7FF00), // Green color for the icon
+                    modifier = Modifier.clickable {
+                        if (searcher.isNotBlank()) {
+                            GlobalNavigation.navController.navigate("search/$searcher")
+                        }
+                    }
                 )
             },
             modifier = Modifier
                 .weight(1.8f)
                 .height(55.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFFA500), // Focused border color is green
-                unfocusedBorderColor = Color.Black, // Unfocused border color is black
-                cursorColor = Color(0xFFFFA500) // Cursor color is green
+                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
+                unfocusedBorderColor = Color.LightGray, 
+                cursorColor = Color(0xFFB7FF00), // Cursor color is green
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             ),
             placeholder = {
                 Text(
                     text = "Search",
-                    style = TextStyle(color = Color.Black,
+                    style = TextStyle(color = Color.LightGray,
                         textAlign = TextAlign.Center,
                         fontSize = 10.sp) // Placeholder text style
                 )
             },
             shape = RoundedCornerShape(40.dp),
-            singleLine = true
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                     if (searcher.isNotBlank()) {
+                        GlobalNavigation.navController.navigate("search/$searcher")
+                    }
+                }
+            )
         )
     }
 }

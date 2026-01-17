@@ -63,4 +63,6 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.2.0")
     implementation("com.tbuonomo:dotsindicator:5.1.0")
-    implementation("androidx.compose.material:material:1.3.1")}
+    implementation("androidx.compose.material:material:1.3.1")
+    implementation("com.razorpay:checkout:1.6.20")
+}

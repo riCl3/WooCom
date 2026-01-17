@@ -33,6 +33,7 @@ fun SplashScreen(
     navController: NavHostController
 ) {
     // Check authentication status
+    // Check authentication status
     val isLoggedIn = com.google.firebase.Firebase.auth.currentUser != null
     val nextDestination = if (isLoggedIn) "home" else "auth"
 
@@ -64,7 +65,7 @@ fun SplashScreen(
 
     // Auto-navigate after 3 seconds
     LaunchedEffect(key1 = true) {
-        delay(5000) // 5 seconds delay
+        delay(2000) // 5 seconds delay
         navController.navigate(nextDestination) {
             // Remove splash from back stack
             popUpTo("splash") {

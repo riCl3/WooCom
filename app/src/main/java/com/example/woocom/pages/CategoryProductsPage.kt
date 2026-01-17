@@ -23,6 +23,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,6 +43,7 @@ import com.example.woocom.model.ProductModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryProductsPage(
     modifier: Modifier = Modifier,
@@ -64,26 +67,40 @@ fun CategoryProductsPage(
             }
     }
 
-    LazyColumn(
-        modifier = Modifier.padding(top = 26.dp),
-        contentPadding = PaddingValues(10.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        items(productList.chunked(2)) { rowItems ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                rowItems.forEach { product ->
-                    ProductItemView(
-                        product = product,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(280.dp) // Fixed height for consistent layout
-                    )
+    Scaffold(
+        topBar = {
+            androidx.compose.material3.TopAppBar(
+                title = { Text(text = "Products") }, // Could fetch category name if available
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
                 }
-                if (rowItems.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(paddingValues)
+                .padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(productList.chunked(2)) { rowItems ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    rowItems.forEach { product ->
+                        ProductItemView(
+                            product = product,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(280.dp) // Fixed height for consistent layout
+                        )
+                    }
+                    if (rowItems.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }

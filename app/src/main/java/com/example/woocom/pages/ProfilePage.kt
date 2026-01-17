@@ -80,14 +80,15 @@ fun ProfilePage(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("My Profile", color = Color(0xFF1A1A1A)) },
+                title = { Text("My Profile", color = Color.White) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White
+                    containerColor = Color.Transparent
                 )
             )
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = Color.Transparent
     ) { paddingValues ->
+        com.example.woocom.components.PremiumBackground {
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -124,6 +125,7 @@ fun ProfilePage(modifier: Modifier = Modifier) {
         }
     }
 }
+}
 
 @Composable
 fun ProfileHeader(user: UserModel?) {
@@ -137,7 +139,7 @@ fun ProfileHeader(user: UserModel?) {
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray),
+                .background(Color.White),
             tint = Color(0xFF1A1A1A).copy(alpha = 0.5f)
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -145,7 +147,7 @@ fun ProfileHeader(user: UserModel?) {
             text = user?.name ?: "Guest User",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            color = Color(0xFF1A1A1A)
+            color = Color.White
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -161,17 +163,18 @@ fun ProfileMenu(onLogoutClicked: () -> Unit, isLoggingOut: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = com.example.woocom.ui.theme.CardSurface),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, com.example.woocom.ui.theme.NeonBorder),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {
-            ProfileMenuItem(icon = Icons.Default.AccountCircle, text = "My Orders")
+            ProfileMenuItem(icon = Icons.Default.AccountCircle, text = "My Orders", onClick = { navController.navigate("orders") })
             Divider(modifier = Modifier.padding(horizontal = 16.dp))
-            ProfileMenuItem(icon = Icons.Default.LocationOn, text = "Shipping Addresses")
+            ProfileMenuItem(icon = Icons.Default.LocationOn, text = "Shipping Addresses", onClick = { navController.navigate("addresses") })
             Divider(modifier = Modifier.padding(horizontal = 16.dp))
-            ProfileMenuItem(icon = Icons.Default.FavoriteBorder, text = "My Wishlist")
+            ProfileMenuItem(icon = Icons.Default.FavoriteBorder, text = "My Wishlist", onClick = { navController.navigate("favorites") })
             Divider(modifier = Modifier.padding(horizontal = 16.dp))
-            ProfileMenuItem(icon = Icons.Default.Settings, text = "Settings")
+            ProfileMenuItem(icon = Icons.Default.Settings, text = "Settings", onClick = { navController.navigate("settings") })
         }
     }
 
@@ -217,13 +220,13 @@ fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
         Icon(
             imageVector = icon,
             contentDescription = text,
-            tint = Color(0xFF1A1A1A).copy(alpha = 0.8f)
+            tint = Color.White.copy(alpha = 0.8f)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = text,
             fontSize = 16.sp,
-            color = Color(0xFF1A1A1A),
+            color = Color.White,
             modifier = Modifier.weight(1f)
         )
         Icon(

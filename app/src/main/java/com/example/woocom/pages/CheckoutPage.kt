@@ -1,5 +1,7 @@
 package com.example.woocom.pages
 
+import android.app.Activity
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -12,12 +14,16 @@ import androidx.compose.ui.unit.sp
 import com.example.woocom.GlobalNavigation
 import com.example.woocom.components.CartItemView
 import com.example.woocom.model.UserModel
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.DarkText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.razorpay.Checkout
 import kotlinx.coroutines.tasks.await
+import org.json.JSONObject
 
 @Composable
-fun CheckoutPage() {
+fun CheckoutPage(totalAmount: Any) {
     val auth = FirebaseAuth.getInstance()
     val userId = auth.currentUser?.uid
     val db = FirebaseFirestore.getInstance()
@@ -29,16 +35,24 @@ fun CheckoutPage() {
     // Load user + cart
     LaunchedEffect(userId) {
         if (userId != null) {
-            val snapshot = db.collection("user")
-                .whereEqualTo("userId", userId)
-                .get()
-                .await()
-            if (!snapshot.isEmpty) {
-                val doc = snapshot.documents.first()
-                user = doc.toObject(UserModel::class.java)
-                userDocId = doc.id
+            try {
+                val snapshot = db.collection("user")
+                    .whereEqualTo("userId", userId)
+                    .get()
+                    .await()
+                if (!snapshot.isEmpty) {
+                    val doc = snapshot.documents.first()
+                    user = doc.toObject(UserModel::class.java)
+                    userDocId = doc.id
+                }
+            } catch (e: Exception) {
+                // Handle permission error or other exceptions
+                Log.e("CheckoutPage", "Error loading user data", e)
+            } finally {
+                isLoading = false
             }
-            isLoading = false
+        } else {
+             isLoading = false
         }
     }
 
@@ -70,9 +84,8 @@ fun CheckoutPage() {
                 // Place Order Button
                 Button(
                     onClick = {
-                        db.collection("user")
-                            .document(userDocId!!)
-                            .update("cartItems", emptyMap<String, Long>())
+                        startPayment(totalAmount as Float)
+                        // IMPORTANT: Cart clearing is now handled in MainActivity.onPaymentSuccess
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -84,7 +97,7 @@ fun CheckoutPage() {
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Proceed to Checkout",
+                        text = "Place Order",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -92,4 +105,23 @@ fun CheckoutPage() {
             }
         }
     }
+}
+fun razorPayApiKey() : String{
+    return "rzp_test_R6KVQIP9lwJh8q"
+}
+
+fun startPayment(amount :  Float){
+    val checkout = Checkout()
+    checkout.setKeyID(razorPayApiKey())
+
+    val options = JSONObject()
+    options.put("name", "WooCom")
+    options.put("description", "Payment")
+    options.put("amount", amount*100)
+    options.put("currency", "INR")
+
+    // Using GlobalNavigation to get context, assuming it is an Activity context or we cast it
+    // ideally should be passed from MainActivity or handled via callback
+    checkout.open(GlobalNavigation.navController.context as Activity, options)
+
 }

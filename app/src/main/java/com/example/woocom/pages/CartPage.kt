@@ -106,24 +106,27 @@ fun CartPage(modifier: Modifier = Modifier) {
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = "Cart",
-                            tint = DarkText
+                            tint = Color.White
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Your Cart", color = DarkText)
+                        Text("Your Cart", color = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = Color.Transparent,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { paddingValues ->
-        Box(
-            modifier = modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
-        ) {
+        com.example.woocom.components.PremiumBackground {
+            Box(
+                modifier = modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+            ) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
@@ -159,8 +162,9 @@ fun CartPage(modifier: Modifier = Modifier) {
                         modifier = Modifier.fillMaxWidth(),
                         elevation = CardDefaults.cardElevation(4.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = Color.White
+                            containerColor = com.example.woocom.ui.theme.CardSurface
                         ),
+                        border = androidx.compose.foundation.BorderStroke(0.5.dp, com.example.woocom.ui.theme.NeonBorder),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Column(
@@ -171,7 +175,8 @@ fun CartPage(modifier: Modifier = Modifier) {
                             Text(
                                 text = "Order Summary",
                                 fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -182,12 +187,14 @@ fun CartPage(modifier: Modifier = Modifier) {
                             ) {
                                 Text(
                                     text = "Subtotal",
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
+                                    color = Color.White
                                 )
                                 Text(
                                     text = "₹${String.format("%.2f", totalPrice)}",
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.White
                                 )
                             }
 
@@ -199,12 +206,14 @@ fun CartPage(modifier: Modifier = Modifier) {
                             ) {
                                 Text(
                                     text = "Shipping",
-                                    fontSize = 16.sp
+                                    fontSize = 16.sp,
+                                    color = Color.White
                                 )
                                 Text(
                                     text = "₹49",
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color.White
                                 )
                             }
 
@@ -219,13 +228,14 @@ fun CartPage(modifier: Modifier = Modifier) {
                                 Text(
                                     text = "Total",
                                     fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
                                 )
                                 Text(
                                     text = "₹${String.format("%.2f", totalPrice + 49)}",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = DarkText
+                                    color = com.example.woocom.ui.theme.GreenPrimary
                                 )
                             }
                         }
@@ -236,7 +246,8 @@ fun CartPage(modifier: Modifier = Modifier) {
                     // Checkout Button
                     Button(
                         onClick = {
-                            GlobalNavigation.navController.navigate("checkout")
+                            val finalAmount = totalPrice + 49
+                            GlobalNavigation.navController.navigate("checkout/$finalAmount")
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -258,7 +269,7 @@ fun CartPage(modifier: Modifier = Modifier) {
         }
     }
 }
-
+}
 @Composable
 fun EmptyCartView(modifier: Modifier = Modifier) {
     Column(
@@ -279,7 +290,7 @@ fun EmptyCartView(modifier: Modifier = Modifier) {
             text = "Your cart is empty",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = DarkText
+            color = Color.White
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -345,8 +356,9 @@ fun CartItemView(
             .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = com.example.woocom.ui.theme.CardSurface
         ),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, com.example.woocom.ui.theme.NeonBorder),
         shape = RoundedCornerShape(16.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -405,7 +417,8 @@ fun CartItemView(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            color = Color.White
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
@@ -414,7 +427,7 @@ fun CartItemView(
                             text = "₹${product!!.price}",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.Black
+                            color = com.example.woocom.ui.theme.GreenPrimary
                         )
 
                         Spacer(modifier = Modifier.height(2.dp))
@@ -434,7 +447,8 @@ fun CartItemView(
                         Text(
                             text = "Total: ₹$itemTotal",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White
                         )
                     }
 
@@ -471,7 +485,8 @@ fun CartItemView(
                             Text(
                                 text = "$quantity",
                                 modifier = Modifier.padding(horizontal = 8.dp),
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
 
                             IconButton(
