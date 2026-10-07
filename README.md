@@ -91,6 +91,19 @@ app/src/main/java/com/example/woocom/
 | `user/{uid}` | profile, `cartItems: {productId: qty}`, `favorites: {productId: true}` |
 | `orders` | `userId`, `amount`, `items`, `status`, `paymentId`, `createdAt` |
 
+## Measured results
+
+Numbers from this repo (before = `b793fdd`, after = current `master`):
+
+| Metric | Before | After |
+| --- | --- | --- |
+| Files that call `Firestore.collection()` | 15 | 2 (both inside `data/`) |
+| Firestore reads per home refresh | 7 (4 carousel queries + categories + banners + profile) | 3 (one product query feeds all four carousels) |
+| Refetch on bottom-tab switch | full re-query of the home screen | 0 (`HomeViewModel` is scoped to the back-stack entry) |
+| Cart rows | one product query per row (N+1) | one batched `whereIn` (chunked at Firestore's 30-item limit) |
+| Unit tests | 1 file, 5 assertions | 16 assertions incl. locale-explicit formatting + route encoding |
+| APK | 25.9 MB (debug) | **5.1 MB** release (R8 + resource shrinking) |
+
 ## Setup
 
 ```bash
