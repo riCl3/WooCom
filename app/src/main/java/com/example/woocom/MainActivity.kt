@@ -12,7 +12,6 @@ import com.razorpay.PaymentResultListener
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity(), PaymentResultListener {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -40,7 +39,7 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
                 }.onFailure { failure ->
                     AppUtil.showToast(
                         this@MainActivity,
-                        "Payment received but could not be recorded: ${failure.localizedMessage}"
+                        "Payment received but could not be recorded: ${failure.localizedMessage}",
                     )
                 }
             }
@@ -50,7 +49,10 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
         }
     }
 
-    override fun onPaymentError(errorCode: Int, response: String?) {
+    override fun onPaymentError(
+        errorCode: Int,
+        response: String?,
+    ) {
         val orderId = PaymentSession.pendingOrderId
         val reason = "code=$errorCode ${orEmpty(response)}".trim()
         lifecycleScope.launch {

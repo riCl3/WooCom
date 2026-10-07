@@ -58,7 +58,7 @@ import com.example.woocom.viewmodel.CartViewModel
 fun CartPage(
     navController: NavHostController,
     onGoHome: () -> Unit = {},
-    viewModel: CartViewModel = viewModel()
+    viewModel: CartViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -75,48 +75,53 @@ fun CartPage(
                         Icon(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = null,
-                            tint = GreenPrimary
+                            tint = GreenPrimary,
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text("Your Cart", color = PrimaryText)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = PrimaryText
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = PrimaryText,
+                    ),
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { paddingValues ->
         PremiumBackground {
             Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
             ) {
                 when {
                     state.isLoading -> LoadingState(modifier = Modifier.align(Alignment.CenterHorizontally))
 
-                    state.error != null -> ErrorState(
-                        message = state.error.orEmpty(),
-                        onRetry = viewModel::refresh,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    state.error != null ->
+                        ErrorState(
+                            message = state.error.orEmpty(),
+                            onRetry = viewModel::refresh,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
 
-                    state.isEmpty -> EmptyCartView(
-                        onBrowseClick = onGoHome,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    state.isEmpty ->
+                        EmptyCartView(
+                            onBrowseClick = onGoHome,
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                        )
 
-                    else -> CartContent(
-                        state = state,
-                        onQuantityChanged = viewModel::changeQuantity,
-                        onRemove = viewModel::remove,
-                        onCheckout = {
-                            navController.navigate(Routes.CHECKOUT) { launchSingleTop = true }
-                        }
-                    )
+                    else ->
+                        CartContent(
+                            state = state,
+                            onQuantityChanged = viewModel::changeQuantity,
+                            onRemove = viewModel::remove,
+                            onCheckout = {
+                                navController.navigate(Routes.CHECKOUT) { launchSingleTop = true }
+                            },
+                        )
                 }
             }
         }
@@ -130,17 +135,19 @@ private fun CartContent(
     state: com.example.woocom.viewmodel.CartState,
     onQuantityChanged: (String, Long) -> Unit,
     onRemove: (String) -> Unit,
-    onCheckout: () -> Unit
+    onCheckout: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
     ) {
         LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
         ) {
             items(state.lines, key = { it.productId }) { line ->
                 CartItemView(
@@ -148,7 +155,7 @@ private fun CartContent(
                     quantity = line.quantity,
                     product = line.product,
                     onQuantityChanged = { onQuantityChanged(line.productId, it) },
-                    onRemove = { onRemove(line.productId) }
+                    onRemove = { onRemove(line.productId) },
                 )
             }
         }
@@ -160,24 +167,28 @@ private fun CartContent(
 }
 
 @Composable
-private fun OrderSummaryCard(totalPrice: Double, onCheckout: () -> Unit) {
+private fun OrderSummaryCard(
+    totalPrice: Double,
+    onCheckout: () -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
         ) {
             Text(
                 text = "Order Summary",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryText
+                color = PrimaryText,
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -193,7 +204,7 @@ private fun OrderSummaryCard(totalPrice: Double, onCheckout: () -> Unit) {
             SummaryRow(
                 label = "Total",
                 value = AppUtil.formatPrice(totalPrice + SHIPPING_COST),
-                emphasize = true
+                emphasize = true,
             )
         }
     }
@@ -202,56 +213,65 @@ private fun OrderSummaryCard(totalPrice: Double, onCheckout: () -> Unit) {
 
     Button(
         onClick = onCheckout,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = GreenPrimary,
-            contentColor = DarkText
-        ),
-        shape = RoundedCornerShape(14.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = GreenPrimary,
+                contentColor = DarkText,
+            ),
+        shape = RoundedCornerShape(14.dp),
     ) {
         Text(
             text = "Proceed to Checkout",
             fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
     }
 }
 
 @Composable
-private fun SummaryRow(label: String, value: String, emphasize: Boolean = false) {
+private fun SummaryRow(
+    label: String,
+    value: String,
+    emphasize: Boolean = false,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = label,
             fontSize = if (emphasize) 18.sp else 16.sp,
             fontWeight = if (emphasize) FontWeight.Bold else FontWeight.Normal,
-            color = PrimaryText
+            color = PrimaryText,
         )
         Text(
             text = value,
             fontSize = if (emphasize) 18.sp else 16.sp,
             fontWeight = if (emphasize) FontWeight.Bold else FontWeight.Medium,
-            color = if (emphasize) GreenPrimary else PrimaryText
+            color = if (emphasize) GreenPrimary else PrimaryText,
         )
     }
 }
 
 @Composable
-private fun EmptyCartView(onBrowseClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun EmptyCartView(
+    onBrowseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.RemoveShoppingCart,
             contentDescription = null,
             modifier = Modifier.size(100.dp),
-            tint = SecondaryText
+            tint = SecondaryText,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -260,7 +280,7 @@ private fun EmptyCartView(onBrowseClick: () -> Unit, modifier: Modifier = Modifi
             text = "Your cart is empty",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = PrimaryText
+            color = PrimaryText,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -268,23 +288,24 @@ private fun EmptyCartView(onBrowseClick: () -> Unit, modifier: Modifier = Modifi
         Text(
             text = "Add items to your cart to continue shopping",
             fontSize = 14.sp,
-            color = SecondaryText
+            color = SecondaryText,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = onBrowseClick,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GreenPrimary,
-                contentColor = DarkText
-            ),
-            shape = RoundedCornerShape(14.dp)
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary,
+                    contentColor = DarkText,
+                ),
+            shape = RoundedCornerShape(14.dp),
         ) {
             Text(
                 text = "Browse Products",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }

@@ -9,9 +9,9 @@
 -dontwarn com.razorpay.**
 
 # Kotlin metadata required by some reflection-based libraries.
--keepattributes Signature
+-keepattributes Signature,SourceFile,LineNumberTable
 -keep class kotlin.Metadata { *; }
 
-# Firebase core rules are bundled with the SDKs; keep the SDK from being shrunk
-# incorrectly on reflective lookups.
--dontwarn com.google.firebase.**
+# Crash reports are only useful with line numbers, and the original file name adds
+# nothing that gives away internal structure.
+-renamesourcefileattribute SourceFile

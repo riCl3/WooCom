@@ -6,5 +6,5 @@ data class UserModel(
     val userId: String = "",
     val cartItems: Map<String, Long> = emptyMap(),
     /** Written by `UserRepository.setFavorite` as `favorites.{productId} = true`. */
-    val favorites: Map<String, Boolean> = emptyMap()
+    val favorites: Map<String, Boolean> = emptyMap(),
 )

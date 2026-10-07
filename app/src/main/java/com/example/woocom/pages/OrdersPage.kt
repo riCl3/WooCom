@@ -87,39 +87,43 @@ fun OrdersPage(navController: NavController) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = PrimaryText
+                                tint = PrimaryText,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 )
-            }
+            },
         ) { padding ->
             Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
             ) {
                 when {
                     isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    loadError != null -> ErrorState(
-                        message = loadError!!,
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    loadError != null ->
+                        ErrorState(
+                            message = loadError!!,
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    orders.isEmpty() -> EmptyState(
-                        icon = Icons.AutoMirrored.Filled.ReceiptLong,
-                        title = "No orders placed yet",
-                        subtitle = "Your completed orders will appear here",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    orders.isEmpty() ->
+                        EmptyState(
+                            icon = Icons.AutoMirrored.Filled.ReceiptLong,
+                            title = "No orders placed yet",
+                            subtitle = "Your completed orders will appear here",
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    else -> OrderList(
-                        orders = orders,
-                        contentPadding = padding
-                    )
+                    else ->
+                        OrderList(
+                            orders = orders,
+                            contentPadding = padding,
+                        )
                 }
             }
         }
@@ -129,14 +133,14 @@ fun OrdersPage(navController: NavController) {
 @Composable
 private fun OrderList(
     orders: List<OrderModel>,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
 ) {
     val datePattern = remember { SimpleDateFormat("d MMM yyyy, h:mm a", Locale.getDefault()) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(orders, key = { it.orderId.ifBlank { it.createdAt.toString() } }) { order ->
             OrderRow(order = order, datePattern = datePattern)
@@ -145,27 +149,31 @@ private fun OrderList(
 }
 
 @Composable
-private fun OrderRow(order: OrderModel, datePattern: SimpleDateFormat) {
+private fun OrderRow(
+    order: OrderModel,
+    datePattern: SimpleDateFormat,
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
-        border = BorderStroke(0.5.dp, NeonBorder)
+        border = BorderStroke(0.5.dp, NeonBorder),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 StatusBadge(status = order.status)
                 Text(
                     text = AppUtil.formatPrice(order.amount),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = GreenPrimary
+                    color = GreenPrimary,
                 )
             }
 
@@ -174,7 +182,7 @@ private fun OrderRow(order: OrderModel, datePattern: SimpleDateFormat) {
             Text(
                 text = "${order.itemCount} item${if (order.itemCount == 1) "" else "s"}",
                 fontSize = 14.sp,
-                color = PrimaryText
+                color = PrimaryText,
             )
 
             if (order.createdAt > 0L) {
@@ -182,7 +190,7 @@ private fun OrderRow(order: OrderModel, datePattern: SimpleDateFormat) {
                 Text(
                     text = datePattern.format(Date(order.createdAt)),
                     fontSize = 13.sp,
-                    color = SecondaryText
+                    color = SecondaryText,
                 )
             }
 
@@ -191,7 +199,7 @@ private fun OrderRow(order: OrderModel, datePattern: SimpleDateFormat) {
                 Text(
                     text = order.failureReason,
                     fontSize = 12.sp,
-                    color = SecondaryText
+                    color = SecondaryText,
                 )
             }
         }
@@ -200,17 +208,19 @@ private fun OrderRow(order: OrderModel, datePattern: SimpleDateFormat) {
 
 @Composable
 private fun StatusBadge(status: String) {
-    val (label, color) = when (status) {
-        OrderModel.STATUS_PAID -> "Paid" to GreenPrimary
-        OrderModel.STATUS_FAILED -> "Failed" to androidx.compose.material3.MaterialTheme.colorScheme.error
-        else -> "Pending" to SecondaryText
-    }
+    val (label, color) =
+        when (status) {
+            OrderModel.STATUS_PAID -> "Paid" to GreenPrimary
+            OrderModel.STATUS_FAILED -> "Failed" to androidx.compose.material3.MaterialTheme.colorScheme.error
+            else -> "Pending" to SecondaryText
+        }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(color = color, shape = RoundedCornerShape(50))
+            modifier =
+                Modifier
+                    .size(8.dp)
+                    .background(color = color, shape = RoundedCornerShape(50)),
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = color)

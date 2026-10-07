@@ -11,17 +11,29 @@ import java.util.Locale
  * Firebase references so it can be unit-tested on the JVM.
  */
 object AppUtil {
-
-    fun showToast(context: Context, message: String) {
+    fun showToast(
+        context: Context,
+        message: String,
+    ) {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
-    /** Safely parses a currency string (e.g. "1,299.00") into a Double. */
+    /**
+     * Safely parses a currency string (e.g. "1,299.00", "₹499", "Rs 99") into a Double.
+     *
+     * Anything that is not a digit, a decimal point or a leading minus is dropped, so a
+     * symbol or thousands separator coming from the backend never turns a price into 0.
+     */
     fun parsePrice(price: String): Double {
-        return try {
-            price.replace(",", "").trim().toDouble()
-        } catch (e: NumberFormatException) {
+        val sanitized = price.filter { it.isDigit() || it == '.' || it == '-' }
+        return if (sanitized.isEmpty() || sanitized == "-") {
             0.0
+        } else {
+            try {
+                sanitized.toDouble()
+            } catch (e: NumberFormatException) {
+                0.0
+            }
         }
     }
 
@@ -33,9 +45,13 @@ object AppUtil {
      * app — cart subtotal, checkout amount, order amount — must go through here or the
      * numbers drift apart.
      */
-    fun lineTotal(sellingPrice: String, quantity: Long): Double =
-        parsePrice(sellingPrice) * quantity
+    fun lineTotal(
+        sellingPrice: String,
+        quantity: Long,
+    ): Double = parsePrice(sellingPrice) * quantity
 
-    fun formatPrice(amount: Double, locale: Locale = Locale.getDefault()): String =
-        String.format(locale, "₹%,.2f", amount)
+    fun formatPrice(
+        amount: Double,
+        locale: Locale = Locale.getDefault(),
+    ): String = String.format(locale, "₹%,.2f", amount)
 }

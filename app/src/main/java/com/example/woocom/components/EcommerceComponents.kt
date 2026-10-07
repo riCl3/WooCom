@@ -46,13 +46,15 @@ import com.example.woocom.ui.theme.SecondaryText
 @Composable
 fun PremiumBackground(content: @Composable BoxScope.() -> Unit) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(GradientStart, GradientEnd)
-                )
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    brush =
+                        Brush.verticalGradient(
+                            colors = listOf(GradientStart, GradientEnd),
+                        ),
+                ),
     ) {
         content()
     }
@@ -62,7 +64,7 @@ fun PremiumBackground(content: @Composable BoxScope.() -> Unit) {
 fun DealsOfTheDayView(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    products: List<ProductModel>
+    products: List<ProductModel>,
 ) {
     ProductRow(modifier = modifier, products = products) { product ->
         DealProductItem(product = product, navController = navController)
@@ -70,44 +72,51 @@ fun DealsOfTheDayView(
 }
 
 @Composable
-fun DealProductItem(product: ProductModel, navController: NavHostController) {
-    val discount = remember(product.id) {
-        calculateDiscount(product.actualPrice, product.price)
-    }
+fun DealProductItem(
+    product: ProductModel,
+    navController: NavHostController,
+) {
+    val discount =
+        remember(product.id) {
+            calculateDiscount(product.actualPrice, product.price)
+        }
 
     NeonGlassCard(
-        modifier = Modifier
-            .width(160.dp)
-            .height(230.dp)
-            .clickable {
-                navController.navigate(Routes.productDetails(product.id)) {
-                    launchSingleTop = true
-                }
-            },
-        shape = RoundedCornerShape(12.dp)
+        modifier =
+            Modifier
+                .width(160.dp)
+                .height(230.dp)
+                .clickable {
+                    navController.navigate(Routes.productDetails(product.id)) {
+                        launchSingleTop = true
+                    }
+                },
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             AsyncImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .clip(RoundedCornerShape(8.dp)),
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = product.title,
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PrimaryText
-                ),
+                style =
+                    TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = PrimaryText,
+                    ),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -115,20 +124,22 @@ fun DealProductItem(product: ProductModel, navController: NavHostController) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "₹${product.price}",
-                    style = TextStyle(
-                        fontWeight = FontWeight.Bold,
-                        color = GreenPrimary
-                    )
+                    style =
+                        TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = GreenPrimary,
+                        ),
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 if (product.actualPrice.isNotBlank() && product.actualPrice != product.price) {
                     Text(
                         text = "₹${product.actualPrice}",
-                        style = TextStyle(
-                            fontSize = 12.sp,
-                            color = SecondaryText,
-                            textDecoration = TextDecoration.LineThrough
-                        )
+                        style =
+                            TextStyle(
+                                fontSize = 12.sp,
+                                color = SecondaryText,
+                                textDecoration = TextDecoration.LineThrough,
+                            ),
                     )
                 }
             }
@@ -138,14 +149,16 @@ fun DealProductItem(product: ProductModel, navController: NavHostController) {
             if (discount > 0) {
                 Text(
                     text = "$discount% OFF",
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    ),
-                    modifier = Modifier
-                        .background(PriceRed, RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                    style =
+                        TextStyle(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                        ),
+                    modifier =
+                        Modifier
+                            .background(PriceRed, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
         }
@@ -156,7 +169,7 @@ fun DealProductItem(product: ProductModel, navController: NavHostController) {
 fun FeaturedProductsView(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    products: List<ProductModel>
+    products: List<ProductModel>,
 ) {
     ProductRow(modifier = modifier, products = products) { product ->
         FeaturedProductItem(product = product, navController = navController)
@@ -164,51 +177,58 @@ fun FeaturedProductsView(
 }
 
 @Composable
-fun FeaturedProductItem(product: ProductModel, navController: NavHostController) {
+fun FeaturedProductItem(
+    product: ProductModel,
+    navController: NavHostController,
+) {
     GlassCard(
-        modifier = Modifier
-            .width(140.dp)
-            .height(190.dp)
-            .clickable {
-                navController.navigate(Routes.productDetails(product.id)) {
-                    launchSingleTop = true
-                }
-            },
-        shape = RoundedCornerShape(12.dp)
+        modifier =
+            Modifier
+                .width(140.dp)
+                .height(190.dp)
+                .clickable {
+                    navController.navigate(Routes.productDetails(product.id)) {
+                        launchSingleTop = true
+                    }
+                },
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             AsyncImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(8.dp)),
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = product.title,
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PrimaryText
-                ),
+                style =
+                    TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = PrimaryText,
+                    ),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "₹${product.price}",
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = GreenPrimary
-                )
+                style =
+                    TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary,
+                    ),
             )
         }
     }
@@ -218,7 +238,7 @@ fun FeaturedProductItem(product: ProductModel, navController: NavHostController)
 fun RecentlyViewedView(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    products: List<ProductModel>
+    products: List<ProductModel>,
 ) {
     ProductRow(modifier = modifier, products = products) { product ->
         RecentlyViewedItem(product = product, navController = navController)
@@ -226,51 +246,58 @@ fun RecentlyViewedView(
 }
 
 @Composable
-fun RecentlyViewedItem(product: ProductModel, navController: NavHostController) {
+fun RecentlyViewedItem(
+    product: ProductModel,
+    navController: NavHostController,
+) {
     NeonGlassCard(
-        modifier = Modifier
-            .width(100.dp)
-            .height(150.dp)
-            .clickable {
-                navController.navigate(Routes.productDetails(product.id)) {
-                    launchSingleTop = true
-                }
-            },
-        shape = RoundedCornerShape(8.dp)
+        modifier =
+            Modifier
+                .width(100.dp)
+                .height(150.dp)
+                .clickable {
+                    navController.navigate(Routes.productDetails(product.id)) {
+                        launchSingleTop = true
+                    }
+                },
+        shape = RoundedCornerShape(8.dp),
     ) {
         Column(modifier = Modifier.padding(6.dp)) {
             AsyncImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .clip(RoundedCornerShape(6.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .clip(RoundedCornerShape(6.dp)),
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = product.title,
-                style = TextStyle(
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PrimaryText
-                ),
+                style =
+                    TextStyle(
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = PrimaryText,
+                    ),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = "₹${product.price}",
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = GreenPrimary
-                )
+                style =
+                    TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary,
+                    ),
             )
         }
     }
@@ -280,7 +307,7 @@ fun RecentlyViewedItem(product: ProductModel, navController: NavHostController) 
 fun RecommendedView(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    products: List<ProductModel>
+    products: List<ProductModel>,
 ) {
     ProductRow(modifier = modifier, products = products) { product ->
         RecommendedProductItem(product = product, navController = navController)
@@ -288,51 +315,58 @@ fun RecommendedView(
 }
 
 @Composable
-fun RecommendedProductItem(product: ProductModel, navController: NavHostController) {
+fun RecommendedProductItem(
+    product: ProductModel,
+    navController: NavHostController,
+) {
     GlassCard(
-        modifier = Modifier
-            .width(150.dp)
-            .height(200.dp)
-            .clickable {
-                navController.navigate(Routes.productDetails(product.id)) {
-                    launchSingleTop = true
-                }
-            },
-        shape = RoundedCornerShape(12.dp)
+        modifier =
+            Modifier
+                .width(150.dp)
+                .height(200.dp)
+                .clickable {
+                    navController.navigate(Routes.productDetails(product.id)) {
+                        launchSingleTop = true
+                    }
+                },
+        shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             AsyncImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .clip(RoundedCornerShape(8.dp)),
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = product.title,
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PrimaryText
-                ),
+                style =
+                    TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = PrimaryText,
+                    ),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = "₹${product.price}",
-                style = TextStyle(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = GreenPrimary
-                )
+                style =
+                    TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary,
+                    ),
             )
         }
     }
@@ -343,25 +377,30 @@ fun RecommendedProductItem(product: ProductModel, navController: NavHostControll
 private fun ProductRow(
     modifier: Modifier,
     products: List<ProductModel>,
-    itemBuilder: @Composable (ProductModel) -> Unit
+    itemBuilder: @Composable (ProductModel) -> Unit,
 ) {
     if (products.isEmpty()) return
 
     LazyRow(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(products, key = { it.id }) { item -> itemBuilder(item) }
     }
 }
 
-private fun calculateDiscount(actualPrice: String, price: String): Int {
+private fun calculateDiscount(
+    actualPrice: String,
+    price: String,
+): Int {
     return try {
         val actual = actualPrice.trim().replace("[^0-9.]".toRegex(), "").toDouble()
         val current = price.trim().replace("[^0-9.]".toRegex(), "").toDouble()
         if (actual > current && actual > 0.0) {
             ((actual - current) / actual * 100).toInt()
-        } else 0
+        } else {
+            0
+        }
     } catch (e: NumberFormatException) {
         0
     }

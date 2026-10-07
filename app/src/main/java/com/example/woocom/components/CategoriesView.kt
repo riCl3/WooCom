@@ -31,7 +31,7 @@ import com.example.woocom.ui.theme.PrimaryText
 fun CategoriesView(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    categories: List<CategoryModel>
+    categories: List<CategoryModel>,
 ) {
     if (categories.isEmpty()) return
 
@@ -43,43 +43,49 @@ fun CategoriesView(
 }
 
 @Composable
-fun CategoryItem(category: CategoryModel, navController: NavHostController) {
+fun CategoryItem(
+    category: CategoryModel,
+    navController: NavHostController,
+) {
     NeonGlassCard(
-        modifier = Modifier
-            .size(110.dp)
-            .padding(4.dp)
-            .clickable {
-                navController.navigate(Routes.categoryProducts(category.id)) {
-                    launchSingleTop = true
-                }
-            },
-        shape = RoundedCornerShape(16.dp)
+        modifier =
+            Modifier
+                .size(110.dp)
+                .padding(4.dp)
+                .clickable {
+                    navController.navigate(Routes.categoryProducts(category.id)) {
+                        launchSingleTop = true
+                    }
+                },
+        shape = RoundedCornerShape(16.dp),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(12.dp)
+            modifier = Modifier.padding(12.dp),
         ) {
             AsyncImage(
                 model = category.imageUrl,
                 contentDescription = category.Name,
                 contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                modifier =
+                    Modifier
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(8.dp)),
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = category.Name,
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = PrimaryText
-                ),
+                style =
+                    TextStyle(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PrimaryText,
+                    ),
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

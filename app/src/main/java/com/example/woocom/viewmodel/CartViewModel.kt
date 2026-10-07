@@ -22,14 +22,14 @@ import kotlinx.coroutines.launch
 data class CartLine(
     val productId: String,
     val quantity: Long,
-    val product: ProductModel?
+    val product: ProductModel?,
 )
 
 data class CartState(
     val lines: List<CartLine> = emptyList(),
     val subtotal: Double = 0.0,
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val isEmpty: Boolean get() = !isLoading && error == null && lines.isEmpty()
     val itemCount: Int get() = lines.sumOf { it.quantity }.toInt()
@@ -44,9 +44,8 @@ data class CartState(
  */
 class CartViewModel(
     private val users: UserRepository = ServiceLocator.userRepository,
-    private val catalogue: ProductRepository = ServiceLocator.productRepository
+    private val catalogue: ProductRepository = ServiceLocator.productRepository,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(CartState())
     val state: StateFlow<CartState> = _state.asStateFlow()
 
@@ -65,11 +64,12 @@ class CartViewModel(
                 _state.update {
                     it.copy(
                         lines = lines,
-                        subtotal = lines.sumOf {
-                            AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity)
-                        },
+                        subtotal =
+                            lines.sumOf {
+                                AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity)
+                            },
                         isLoading = false,
-                        error = null
+                        error = null,
                     )
                 }
             } ?: run {
@@ -79,7 +79,10 @@ class CartViewModel(
         }
     }
 
-    fun changeQuantity(productId: String, quantity: Long) {
+    fun changeQuantity(
+        productId: String,
+        quantity: Long,
+    ) {
         mutate("Could not update quantity") {
             users.setCartQuantity(productId, quantity)
         }
@@ -91,7 +94,10 @@ class CartViewModel(
         }
     }
 
-    private inline fun mutate(failureMessage: String, crossinline action: suspend () -> Unit) {
+    private inline fun mutate(
+        failureMessage: String,
+        crossinline action: suspend () -> Unit,
+    ) {
         viewModelScope.launch {
             val outcome = resourceOf { action() }
             val error = outcome as? Resource.Error

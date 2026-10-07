@@ -15,7 +15,7 @@ data class OrderModel(
     val items: Map<String, Long> = emptyMap(),
     val status: String = STATUS_PENDING,
     val createdAt: Long = 0L,
-    val failureReason: String = ""
+    val failureReason: String = "",
 ) {
     companion object {
         const val STATUS_PENDING = "pending"

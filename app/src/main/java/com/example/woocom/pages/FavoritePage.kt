@@ -56,7 +56,6 @@ import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
-import com.example.woocom.ui.theme.SecondaryText
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,16 +72,18 @@ fun FavoritePage() {
     LaunchedEffect(attempt) {
         isLoading = true
         loadError = null
-        val result = resourceOf {
-            val user = ServiceLocator.userRepository.currentUser()
-                ?: throw IllegalStateException("Please sign in to see your favourites.")
-            val favoriteIds = user.favorites.filterValues { it }.keys.toList()
-            if (favoriteIds.isEmpty()) {
-                emptyList()
-            } else {
-                ServiceLocator.productRepository.productsByIds(favoriteIds)
+        val result =
+            resourceOf {
+                val user =
+                    ServiceLocator.userRepository.currentUser()
+                        ?: throw IllegalStateException("Please sign in to see your favourites.")
+                val favoriteIds = user.favorites.filterValues { it }.keys.toList()
+                if (favoriteIds.isEmpty()) {
+                    emptyList()
+                } else {
+                    ServiceLocator.productRepository.productsByIds(favoriteIds)
+                }
             }
-        }
         favoriteProducts = result.dataOrNull.orEmpty()
         loadError = result.errorMessageOrNull
         isLoading = false
@@ -92,9 +93,10 @@ fun FavoritePage() {
         val remaining = favoriteProducts.filterNot { it.id == product.id }
         favoriteProducts = remaining
         scope.launch {
-            val result = resourceOf {
-                ServiceLocator.userRepository.setFavorite(product.id, favorite = false)
-            }
+            val result =
+                resourceOf {
+                    ServiceLocator.userRepository.setFavorite(product.id, favorite = false)
+                }
             if (result.errorMessageOrNull != null) {
                 favoriteProducts = favoriteProducts + product
                 AppUtil.showToast(context, "Could not remove ${product.title}")
@@ -106,46 +108,51 @@ fun FavoritePage() {
         topBar = {
             TopAppBar(
                 title = { Text("Favorites", color = PrimaryText) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { padding ->
         PremiumBackground {
             Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
             ) {
                 when {
                     isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    loadError != null -> ErrorState(
-                        message = loadError!!,
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    loadError != null ->
+                        ErrorState(
+                            message = loadError!!,
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    favoriteProducts.isEmpty() -> EmptyState(
-                        icon = Icons.Default.FavoriteBorder,
-                        title = "No favourites yet",
-                        subtitle = "Tap the heart on a product to add it here",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    favoriteProducts.isEmpty() ->
+                        EmptyState(
+                            icon = Icons.Default.FavoriteBorder,
+                            title = "No favourites yet",
+                            subtitle = "Tap the heart on a product to add it here",
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    else -> LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(favoriteProducts, key = { it.id }) { product ->
-                            FavoriteItemCard(
-                                product = product,
-                                onRemove = { remove(product) }
-                            )
+                    else ->
+                        LazyColumn(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(favoriteProducts, key = { it.id }) { product ->
+                                FavoriteItemCard(
+                                    product = product,
+                                    onRemove = { remove(product) },
+                                )
+                            }
                         }
-                    }
                 }
             }
         }
@@ -155,32 +162,34 @@ fun FavoritePage() {
 @Composable
 private fun FavoriteItemCard(
     product: ProductModel,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier
-                    .size(84.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(GreenPrimary.copy(alpha = 0.08f))
+                modifier =
+                    Modifier
+                        .size(84.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(GreenPrimary.copy(alpha = 0.08f)),
             ) {
                 AsyncImage(
                     model = product.images.firstOrNull(),
                     contentDescription = product.title,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
                 )
             }
 
@@ -192,26 +201,27 @@ private fun FavoriteItemCard(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = PrimaryText,
-                    maxLines = 2
+                    maxLines = 2,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "₹${product.price}",
                     fontSize = 14.sp,
-                    color = GreenPrimary
+                    color = GreenPrimary,
                 )
             }
 
             IconButton(
                 onClick = onRemove,
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(Color.Red.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .background(Color.Red.copy(alpha = 0.08f), RoundedCornerShape(10.dp)),
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = "Remove from favourites",
-                    tint = Color(0xFFFF6B6B)
+                    tint = Color(0xFFFF6B6B),
                 )
             }
         }

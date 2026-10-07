@@ -24,8 +24,11 @@ fun rememberAddToCart(): (String) -> Unit {
             val outcome = resourceOf { ServiceLocator.userRepository.addToCart(productId) }
             AppUtil.showToast(
                 context,
-                if (outcome is Resource.Error) "Could not add item to cart"
-                else "Item added to cart"
+                if (outcome is Resource.Error) {
+                    "Could not add item to cart"
+                } else {
+                    "Item added to cart"
+                },
             )
         }
     }

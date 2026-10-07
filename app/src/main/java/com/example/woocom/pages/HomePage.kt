@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -48,60 +48,67 @@ import com.example.woocom.viewmodel.HomeViewModel
 @Composable
 fun HomePage(
     navController: NavHostController,
-    viewModel: HomeViewModel = viewModel()
+    viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = state.isLoading && state.dataOrNull != null,
-        onRefresh = viewModel::refresh
-    )
+    val pullRefreshState =
+        rememberPullRefreshState(
+            refreshing = state.isLoading && state.dataOrNull != null,
+            onRefresh = viewModel::refresh,
+        )
 
     PremiumBackground {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .pullRefresh(pullRefreshState)
-                .verticalScroll(rememberScrollState())
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .pullRefresh(pullRefreshState)
+                    .verticalScroll(rememberScrollState()),
         ) {
             when (val current = state) {
                 Resource.Loading -> LoadingState(modifier = Modifier.padding(top = 120.dp))
 
-                is Resource.Error -> ErrorState(
-                    message = current.message,
-                    onRetry = viewModel::refresh,
-                    modifier = Modifier.padding(top = 120.dp)
-                )
+                is Resource.Error ->
+                    ErrorState(
+                        message = current.message,
+                        onRetry = viewModel::refresh,
+                        modifier = Modifier.padding(top = 120.dp),
+                    )
 
-                is Resource.Success -> HomeContent(
-                    catalogue = current.data,
-                    navController = navController
-                )
+                is Resource.Success ->
+                    HomeContent(
+                        catalogue = current.data,
+                        navController = navController,
+                    )
             }
         }
 
         PullRefreshIndicator(
             refreshing = state.isLoading && state.dataOrNull != null,
             state = pullRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
+            modifier = Modifier.align(Alignment.TopCenter),
         )
     }
 }
 
 @Composable
-private fun HomeContent(catalogue: HomeCatalogue, navController: NavHostController) {
+private fun HomeContent(
+    catalogue: HomeCatalogue,
+    navController: NavHostController,
+) {
     Column(modifier = Modifier.fillMaxWidth()) {
         HeaderView(
             modifier = Modifier.padding(horizontal = 16.dp),
             navController = navController,
-            userName = catalogue.userName
+            userName = catalogue.userName,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         BannerView(
             modifier = Modifier.padding(horizontal = 16.dp),
-            banners = catalogue.banners
+            banners = catalogue.banners,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -111,7 +118,7 @@ private fun HomeContent(catalogue: HomeCatalogue, navController: NavHostControll
         CategoriesView(
             modifier = Modifier.padding(horizontal = 16.dp),
             navController = navController,
-            categories = catalogue.categories
+            categories = catalogue.categories,
         )
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -121,7 +128,7 @@ private fun HomeContent(catalogue: HomeCatalogue, navController: NavHostControll
         DealsOfTheDayView(
             modifier = Modifier.padding(horizontal = 16.dp),
             navController = navController,
-            products = catalogue.deals
+            products = catalogue.deals,
         )
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -131,7 +138,7 @@ private fun HomeContent(catalogue: HomeCatalogue, navController: NavHostControll
         FeaturedProductsView(
             modifier = Modifier.padding(horizontal = 16.dp),
             navController = navController,
-            products = catalogue.featured
+            products = catalogue.featured,
         )
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -141,7 +148,7 @@ private fun HomeContent(catalogue: HomeCatalogue, navController: NavHostControll
         RecentlyViewedView(
             modifier = Modifier.padding(horizontal = 16.dp),
             navController = navController,
-            products = catalogue.recentlyViewed
+            products = catalogue.recentlyViewed,
         )
 
         Spacer(modifier = Modifier.height(28.dp))
@@ -149,11 +156,12 @@ private fun HomeContent(catalogue: HomeCatalogue, navController: NavHostControll
         SectionTitle("Recommended for You")
         Spacer(modifier = Modifier.height(12.dp))
         RecommendedView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
             navController = navController,
-            products = catalogue.recommended
+            products = catalogue.recommended,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -167,6 +175,6 @@ private fun SectionTitle(text: String) {
         style = MaterialTheme.typography.headlineMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = 16.dp),
     )
 }

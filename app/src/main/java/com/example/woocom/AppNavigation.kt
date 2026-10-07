@@ -26,7 +26,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH,
-        modifier = modifier
+        modifier = modifier,
     ) {
         composable(Routes.SPLASH) {
             SplashScreen(navController)

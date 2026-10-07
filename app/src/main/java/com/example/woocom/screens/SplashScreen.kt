@@ -48,29 +48,32 @@ fun SplashScreen(navController: NavHostController) {
     val logoScale by transition.animateFloat(
         initialValue = 0.92f,
         targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 900),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "logo-pulse"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = 900),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        label = "logo-pulse",
     )
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(listOf(GradientStart, GradientEnd))
-            ),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(listOf(GradientStart, GradientEnd)),
+                ),
+        contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 painter = painterResource(id = R.drawable.icon_bg),
                 contentDescription = "WooCom logo",
-                modifier = Modifier
-                    .size(160.dp)
-                    .scale(logoScale)
-                    .alpha(0.95f)
+                modifier =
+                    Modifier
+                        .size(160.dp)
+                        .scale(logoScale)
+                        .alpha(0.95f),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -79,15 +82,16 @@ fun SplashScreen(navController: NavHostController) {
                 text = "WooCom",
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color.White
+                color = Color.White,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .background(NeonGreen, CircleShape)
+                modifier =
+                    Modifier
+                        .size(6.dp)
+                        .background(NeonGreen, CircleShape),
             )
         }
     }

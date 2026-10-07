@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+    alias(libs.plugins.ktlint)
 }
 
 android {
@@ -13,27 +14,54 @@ android {
         applicationId = "com.example.woocom"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Payment key is interpolated from a gradle property so it never lives in
         // source control. Supply it via gradle.properties or a CI secret.
-        val razorpayKeyId = providers.gradleProperty("RAZORPAY_KEY_ID")
-            .orElse("rzp_test_XXXXXXXXXXXX")
-            .get()
+        val razorpayKeyId =
+            providers.gradleProperty("RAZORPAY_KEY_ID")
+                .orElse("rzp_test_XXXXXXXXXXXX")
+                .get()
         buildConfigField("String", "RAZORPAY_KEY_ID", "\"$razorpayKeyId\"")
+    }
+
+    // Release signing is opt-in: point WOOCOM_KEYSTORE / WOOCOM_KEYSTORE_PASSWORD /
+    // WOOCOM_KEY_ALIAS / WOOCOM_KEY_PASSWORD at a keystore that is never committed.
+    // Without them the release build still compiles (unsigned), which keeps CI green.
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("WOOCOM_KEYSTORE")
+            if (!keystorePath.isNullOrBlank() && file(keystorePath).exists()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("WOOCOM_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("WOOCOM_KEY_ALIAS")
+                keyPassword = System.getenv("WOOCOM_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
+            signingConfig =
+                signingConfigs.getByName("release")
+                    .takeIf { it.storeFile != null }
         }
+    }
+
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        htmlReport = true
+        textReport = true
     }
 
     compileOptions {
@@ -79,9 +107,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("io.coil-kt:coil-compose:2.2.0")
-    implementation("com.tbuonomo:dotsindicator:5.1.0")
-    implementation("androidx.compose.material:material:1.3.1")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("com.razorpay:checkout:1.6.20")
+    implementation(libs.coil.compose)
+    implementation(libs.dots.indicator)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.razorpay.checkout)
 }

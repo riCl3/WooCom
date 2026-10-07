@@ -32,7 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -66,7 +65,7 @@ import com.example.woocom.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(
     navController: NavHostController,
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -100,19 +99,20 @@ fun LoginScreen(
 
     PremiumBackground {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .statusBarsPadding()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Image(
                 painter = painterResource(id = R.drawable.icon_bg),
                 contentDescription = "WooCom logo",
-                modifier = Modifier.size(110.dp)
+                modifier = Modifier.size(110.dp),
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -121,7 +121,7 @@ fun LoginScreen(
                 text = "Welcome back",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = PrimaryText
+                color = PrimaryText,
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -129,7 +129,7 @@ fun LoginScreen(
             Text(
                 text = "Log in to continue shopping",
                 fontSize = 14.sp,
-                color = SecondaryText
+                color = SecondaryText,
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -138,7 +138,7 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = CardSurface.copy(alpha = 0.9f)),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder)
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     OutlinedTextField(
@@ -151,22 +151,27 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Default.Email,
                                 contentDescription = null,
-                                tint = GreenPrimary
+                                tint = GreenPrimary,
                             )
                         },
-                        modifier = Modifier
-                            .fillMaxWidth(),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth(),
                         colors = fieldColors(),
                         label = { Text("Email") },
                         singleLine = true,
                         isError = emailError,
-                        supportingText = if (emailError) {
-                            { Text("Enter a valid email address") }
-                        } else null,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        )
+                        supportingText =
+                            if (emailError) {
+                                { Text("Enter a valid email address") }
+                            } else {
+                                null
+                            },
+                        keyboardOptions =
+                            androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next,
+                            ),
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -181,7 +186,7 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Default.Lock,
                                 contentDescription = null,
-                                tint = GreenPrimary
+                                tint = GreenPrimary,
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -189,14 +194,18 @@ fun LoginScreen(
                         label = { Text("Password") },
                         singleLine = true,
                         isError = passwordError,
-                        supportingText = if (passwordError) {
-                            { Text("Password must be at least 6 characters") }
-                        } else null,
+                        supportingText =
+                            if (passwordError) {
+                                { Text("Password must be at least 6 characters") }
+                            } else {
+                                null
+                            },
                         visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        )
+                        keyboardOptions =
+                            androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done,
+                            ),
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
@@ -205,37 +214,40 @@ fun LoginScreen(
                         onClick = {
                             if (validate()) authViewModel.login(email.trim(), password)
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(54.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = GreenPrimary,
-                            contentColor = DarkText
-                        ),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(54.dp),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = GreenPrimary,
+                                contentColor = DarkText,
+                            ),
                         shape = RoundedCornerShape(14.dp),
-                        enabled = !isLoading
+                        enabled = !isLoading,
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(22.dp),
                                 color = DarkText,
-                                strokeWidth = 2.dp
+                                strokeWidth = 2.dp,
                             )
                         } else {
                             Text(
                                 text = "Log In",
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         }
                     }
 
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 12.dp),
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text("Don't have an account? ", color = SecondaryText)
                         TextButton(onClick = {
@@ -253,15 +265,16 @@ fun LoginScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = GreenPrimary,
-    unfocusedBorderColor = GreenPrimary.copy(alpha = 0.35f),
-    cursorColor = GreenPrimary,
-    focusedTextColor = PrimaryText,
-    unfocusedTextColor = PrimaryText,
-    focusedLabelColor = GreenPrimary,
-    unfocusedLabelColor = SecondaryText,
-    errorBorderColor = Color(0xFFFF6B6B),
-    errorLabelColor = Color(0xFFFF6B6B),
-    errorSupportingTextColor = Color(0xFFFF6B6B)
-)
+private fun fieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = GreenPrimary,
+        unfocusedBorderColor = GreenPrimary.copy(alpha = 0.35f),
+        cursorColor = GreenPrimary,
+        focusedTextColor = PrimaryText,
+        unfocusedTextColor = PrimaryText,
+        focusedLabelColor = GreenPrimary,
+        unfocusedLabelColor = SecondaryText,
+        errorBorderColor = Color(0xFFFF6B6B),
+        errorLabelColor = Color(0xFFFF6B6B),
+        errorSupportingTextColor = Color(0xFFFF6B6B),
+    )

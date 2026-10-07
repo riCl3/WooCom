@@ -42,7 +42,10 @@ import com.example.woocom.ui.theme.PrimaryText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryProductsPage(navController: NavHostController, categoryId: String) {
+fun CategoryProductsPage(
+    navController: NavHostController,
+    categoryId: String,
+) {
     var productList by remember { mutableStateOf(listOf<ProductModel>()) }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
@@ -51,9 +54,10 @@ fun CategoryProductsPage(navController: NavHostController, categoryId: String) {
     LaunchedEffect(categoryId, attempt) {
         isLoading = true
         loadError = null
-        val result = resourceOf {
-            ServiceLocator.productRepository.productsInCategory(categoryId)
-        }
+        val result =
+            resourceOf {
+                ServiceLocator.productRepository.productsInCategory(categoryId)
+            }
         productList = result.dataOrNull.orEmpty()
         loadError = result.errorMessageOrNull
         isLoading = false
@@ -70,67 +74,74 @@ fun CategoryProductsPage(navController: NavHostController, categoryId: String) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = PrimaryText
+                                tint = PrimaryText,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = PrimaryText,
-                        navigationIconContentColor = PrimaryText
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = PrimaryText,
+                            navigationIconContentColor = PrimaryText,
+                        ),
                 )
-            }
+            },
         ) { paddingValues ->
             Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
             ) {
                 when {
                     isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    loadError != null -> ErrorState(
-                        message = loadError!!,
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    loadError != null ->
+                        ErrorState(
+                            message = loadError!!,
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    productList.isEmpty() -> EmptyState(
-                        title = "No products in this category yet",
-                        subtitle = "Check back soon for new arrivals",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    productList.isEmpty() ->
+                        EmptyState(
+                            title = "No products in this category yet",
+                            subtitle = "Check back soon for new arrivals",
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    else -> LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(
-                            items = productList.chunked(2),
-                            key = { chunk -> chunk.first().id }
-                        ) { rowItems ->
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                rowItems.forEach { product ->
-                                    ProductItemView(
-                                        product = product,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(260.dp),
-                                        navController = navController
-                                    )
-                                }
-                                if (rowItems.size == 1) {
-                                    Spacer(modifier = Modifier.weight(1f))
+                    else ->
+                        LazyColumn(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            items(
+                                items = productList.chunked(2),
+                                key = { chunk -> chunk.first().id },
+                            ) { rowItems ->
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                ) {
+                                    rowItems.forEach { product ->
+                                        ProductItemView(
+                                            product = product,
+                                            modifier =
+                                                Modifier
+                                                    .weight(1f)
+                                                    .height(260.dp),
+                                            navController = navController,
+                                        )
+                                    }
+                                    if (rowItems.size == 1) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                    }
                                 }
                             }
                         }
-                    }
                 }
             }
         }

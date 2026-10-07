@@ -33,40 +33,48 @@ interface UserRepository {
 
     suspend fun addToCart(productId: String)
 
-    suspend fun setCartQuantity(productId: String, quantity: Long)
+    suspend fun setCartQuantity(
+        productId: String,
+        quantity: Long,
+    )
 
     suspend fun removeFromCart(productId: String)
 
     suspend fun clearCart()
 
-    suspend fun setFavorite(productId: String, favorite: Boolean)
+    suspend fun setFavorite(
+        productId: String,
+        favorite: Boolean,
+    )
 
     suspend fun isFavorite(productId: String): Boolean
 
     suspend fun placeOrder(order: OrderModel): String
 
-    suspend fun markOrderPaid(orderId: String, paymentId: String)
+    suspend fun markOrderPaid(
+        orderId: String,
+        paymentId: String,
+    )
 
-    suspend fun markOrderFailed(orderId: String, reason: String)
+    suspend fun markOrderFailed(
+        orderId: String,
+        reason: String,
+    )
 
     suspend fun ordersForUser(): List<OrderModel>
 }
 
 class FirestoreUserRepository(
     private val db: FirebaseFirestore = Firebase.firestore,
-    private val auth: FirebaseAuth = Firebase.auth
+    private val auth: FirebaseAuth = Firebase.auth,
 ) : UserRepository {
+    override fun userDocument(): DocumentReference? = auth.currentUser?.uid?.let { db.collection(USER_COLLECTION).document(it) }
 
-    override fun userDocument(): DocumentReference? =
-        auth.currentUser?.uid?.let { db.collection(USER_COLLECTION).document(it) }
-
-    private fun requireUserDocument(): DocumentReference =
-        userDocument() ?: throw IllegalStateException("You need to sign in first")
+    private fun requireUserDocument(): DocumentReference = userDocument() ?: throw IllegalStateException("You need to sign in first")
 
     override fun currentUserId(): String? = auth.currentUser?.uid
 
-    override suspend fun currentUser(): UserModel? =
-        userDocument()?.get()?.await()?.toObject(UserModel::class.java)
+    override suspend fun currentUser(): UserModel? = userDocument()?.get()?.await()?.toObject(UserModel::class.java)
 
     override suspend fun addToCart(productId: String) {
         requireUserDocument()
@@ -74,7 +82,10 @@ class FirestoreUserRepository(
             .await()
     }
 
-    override suspend fun setCartQuantity(productId: String, quantity: Long) {
+    override suspend fun setCartQuantity(
+        productId: String,
+        quantity: Long,
+    ) {
         val doc = requireUserDocument()
         if (quantity <= 0) {
             doc.update(FieldPath.of(CART_ITEMS, productId), FieldValue.delete()).await()
@@ -93,7 +104,10 @@ class FirestoreUserRepository(
         requireUserDocument().update(CART_ITEMS, emptyMap<String, Any>()).await()
     }
 
-    override suspend fun setFavorite(productId: String, favorite: Boolean) {
+    override suspend fun setFavorite(
+        productId: String,
+        favorite: Boolean,
+    ) {
         val doc = requireUserDocument()
         if (favorite) {
             doc.update(FieldPath.of(FAVORITES, productId), true).await()
@@ -114,23 +128,29 @@ class FirestoreUserRepository(
         return doc.id
     }
 
-    override suspend fun markOrderPaid(orderId: String, paymentId: String) {
+    override suspend fun markOrderPaid(
+        orderId: String,
+        paymentId: String,
+    ) {
         db.collection(ORDERS).document(orderId)
             .update(
                 mapOf(
                     "status" to OrderModel.STATUS_PAID,
-                    "paymentId" to paymentId
-                )
+                    "paymentId" to paymentId,
+                ),
             ).await()
     }
 
-    override suspend fun markOrderFailed(orderId: String, reason: String) {
+    override suspend fun markOrderFailed(
+        orderId: String,
+        reason: String,
+    ) {
         db.collection(ORDERS).document(orderId)
             .update(
                 mapOf(
                     "status" to OrderModel.STATUS_FAILED,
-                    "failureReason" to reason.take(MAX_REASON_LENGTH)
-                )
+                    "failureReason" to reason.take(MAX_REASON_LENGTH),
+                ),
             ).await()
     }
 

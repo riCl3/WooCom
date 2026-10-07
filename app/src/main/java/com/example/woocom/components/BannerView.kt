@@ -20,7 +20,10 @@ import com.tbuonomo.viewpagerdotsindicator.compose.type.ShiftIndicatorType
 import kotlinx.coroutines.delay
 
 @Composable
-fun BannerView(modifier: Modifier = Modifier, banners: List<String> = emptyList()) {
+fun BannerView(
+    modifier: Modifier = Modifier,
+    banners: List<String> = emptyList(),
+) {
     if (banners.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -39,17 +42,19 @@ fun BannerView(modifier: Modifier = Modifier, banners: List<String> = emptyList(
         HorizontalPager(
             state = pagerState,
             pageSpacing = 16.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(150.dp),
         ) { index ->
             AsyncImage(
                 model = banners.getOrNull(index),
                 contentDescription = "Promotional banner ${index + 1}",
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp)),
             )
         }
 
@@ -58,10 +63,11 @@ fun BannerView(modifier: Modifier = Modifier, banners: List<String> = emptyList(
         if (banners.size > 1) {
             DotsIndicator(
                 dotCount = banners.size,
-                type = ShiftIndicatorType(
-                    dotsGraphic = DotGraphic(color = androidx.compose.ui.graphics.Color.LightGray)
-                ),
-                pagerState = pagerState
+                type =
+                    ShiftIndicatorType(
+                        dotsGraphic = DotGraphic(color = androidx.compose.ui.graphics.Color.LightGray),
+                    ),
+                pagerState = pagerState,
             )
         }
     }

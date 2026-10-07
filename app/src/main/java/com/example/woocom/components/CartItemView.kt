@@ -1,7 +1,6 @@
 package com.example.woocom.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,23 +54,24 @@ fun CartItemView(
     modifier: Modifier = Modifier,
     product: ProductModel? = null,
     onQuantityChanged: (Long) -> Unit = {},
-    onRemove: () -> Unit = {}
+    onRemove: () -> Unit = {},
 ) {
     Card(
         modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         when (product) {
             null -> NotFoundBox()
-            else -> CartItemContent(
-                product = product,
-                quantity = quantity,
-                onQuantityChanged = onQuantityChanged,
-                onRemove = onRemove
-            )
+            else ->
+                CartItemContent(
+                    product = product,
+                    quantity = quantity,
+                    onQuantityChanged = onQuantityChanged,
+                    onRemove = onRemove,
+                )
         }
     }
 }
@@ -79,10 +79,11 @@ fun CartItemView(
 @Composable
 private fun NotFoundBox() {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Text("This product is no longer available", color = SecondaryText)
     }
@@ -93,27 +94,29 @@ private fun CartItemContent(
     product: ProductModel,
     quantity: Long,
     onQuantityChanged: (Long) -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.LightGray)
+                modifier =
+                    Modifier
+                        .size(100.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.LightGray),
             ) {
                 if (product.images.isNotEmpty()) {
                     AsyncImage(
                         model = product.images.first(),
                         contentDescription = product.title,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -121,9 +124,10 @@ private fun CartItemContent(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
             ) {
                 Text(
                     text = product.title,
@@ -131,7 +135,7 @@ private fun CartItemContent(
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    color = PrimaryText
+                    color = PrimaryText,
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -140,7 +144,7 @@ private fun CartItemContent(
                     text = "₹${product.price}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = GreenPrimary
+                    color = GreenPrimary,
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -149,7 +153,7 @@ private fun CartItemContent(
                     text = "₹${product.actualPrice}",
                     fontSize = 14.sp,
                     color = SecondaryText,
-                    textDecoration = TextDecoration.LineThrough
+                    textDecoration = TextDecoration.LineThrough,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -159,7 +163,7 @@ private fun CartItemContent(
                     text = "Total: ${AppUtil.formatPrice(itemTotal)}",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = PrimaryText
+                    color = PrimaryText,
                 )
             }
 
@@ -171,16 +175,20 @@ private fun CartItemContent(
                         contentDescription = "Decrease quantity",
                         tint = if (quantity > 1) DarkText else Color.Gray,
                         enabled = quantity > 1,
-                        background = if (quantity > 1) GreenPrimary.copy(alpha = 0.25f)
-                        else Color.Gray.copy(alpha = 0.1f),
-                        onClick = { onQuantityChanged(quantity - 1) }
+                        background =
+                            if (quantity > 1) {
+                                GreenPrimary.copy(alpha = 0.25f)
+                            } else {
+                                Color.Gray.copy(alpha = 0.1f)
+                            },
+                        onClick = { onQuantityChanged(quantity - 1) },
                     )
 
                     Text(
                         text = "$quantity",
                         modifier = Modifier.padding(horizontal = 8.dp),
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryText
+                        color = PrimaryText,
                     )
 
                     QuantityButton(
@@ -189,7 +197,7 @@ private fun CartItemContent(
                         tint = DarkText,
                         enabled = true,
                         background = GreenPrimary.copy(alpha = 0.25f),
-                        onClick = { onQuantityChanged(quantity + 1) }
+                        onClick = { onQuantityChanged(quantity + 1) },
                     )
                 }
             }
@@ -197,16 +205,17 @@ private fun CartItemContent(
 
         IconButton(
             onClick = onRemove,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(8.dp)
-                .size(36.dp)
-                .background(Color.Red.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .size(36.dp)
+                    .background(Color.Red.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Remove ${product.title} from cart",
-                tint = Color.Gray
+                tint = Color.Gray,
             )
         }
     }
@@ -219,14 +228,15 @@ private fun QuantityButton(
     tint: Color,
     enabled: Boolean,
     background: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     IconButton(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier
-            .size(32.dp)
-            .background(background, RoundedCornerShape(8.dp))
+        modifier =
+            Modifier
+                .size(32.dp)
+                .background(background, RoundedCornerShape(8.dp)),
     ) {
         Icon(imageVector = icon, contentDescription = contentDescription, tint = tint)
     }

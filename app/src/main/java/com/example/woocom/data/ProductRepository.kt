@@ -38,9 +38,8 @@ interface ProductRepository {
 }
 
 class FirestoreProductRepository(
-    private val db: FirebaseFirestore = Firebase.firestore
+    private val db: FirebaseFirestore = Firebase.firestore,
 ) : ProductRepository {
-
     private fun products() = db.collection(DATA).document(STOCK).collection(PRODUCTS)
 
     override suspend fun products(limit: Int): List<ProductModel> =
@@ -53,7 +52,9 @@ class FirestoreProductRepository(
 
     override suspend fun banners(): List<String> =
         db.collection(DATA).document(BANNER)
-            .get().await().get("urls") as? List<String> ?: emptyList()
+            .get().await().get("urls")
+            ?.let { raw -> (raw as? List<*>)?.filterIsInstance<String>() }
+            ?: emptyList()
 
     override suspend fun productById(productId: String): ProductModel? =
         products().whereEqualTo("id", productId).limit(1)
@@ -92,6 +93,7 @@ class FirestoreProductRepository(
         const val DATA = "data"
         const val STOCK = "stock"
         const val PRODUCTS = "products"
+
         // Spelled this way in the live backend; corrected in the Supabase schema.
         const val CATEGORIES = "categoties"
         const val BANNER = "banner"

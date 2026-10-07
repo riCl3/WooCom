@@ -8,5 +8,5 @@ data class ProductModel(
     val price: String = "",
     val actualPrice: String = "",
     val images: List<String> = emptyList(),
-    val otherDetails: Map<String, Any> = emptyMap()
+    val otherDetails: Map<String, Any> = emptyMap(),
 )

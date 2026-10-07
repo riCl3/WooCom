@@ -31,38 +31,41 @@ import com.example.woocom.ui.theme.GradientStart
 
 data class NavItem(
     val label: String,
-    val icon: ImageVector
+    val icon: ImageVector,
 )
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    val navItemList = listOf(
-        NavItem("Home", Icons.Default.Home),
-        NavItem("Favorite", Icons.Default.Favorite),
-        NavItem("Cart", Icons.Default.ShoppingCart),
-        NavItem("Profile", Icons.Default.Person)
-    )
+    val navItemList =
+        listOf(
+            NavItem("Home", Icons.Default.Home),
+            NavItem("Favorite", Icons.Default.Favorite),
+            NavItem("Cart", Icons.Default.ShoppingCart),
+            NavItem("Profile", Icons.Default.Person),
+        )
 
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(GradientStart, GradientEnd)
-                )
-            )
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(GradientStart, GradientEnd),
+                    ),
+                ),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 88.dp)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 88.dp),
         ) {
             ContentScreen(
                 navController = navController,
                 selectedIndex = selectedIndex,
-                onSelectTab = { selectedIndex = it }
+                onSelectTab = { selectedIndex = it },
             )
         }
 
@@ -70,7 +73,7 @@ fun HomeScreen(navController: NavHostController) {
             navItems = navItemList,
             selectedIndex = selectedIndex,
             onItemSelected = { selectedIndex = it },
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
 }
@@ -79,7 +82,7 @@ fun HomeScreen(navController: NavHostController) {
 private fun ContentScreen(
     navController: NavHostController,
     selectedIndex: Int,
-    onSelectTab: (Int) -> Unit
+    onSelectTab: (Int) -> Unit,
 ) {
     when (selectedIndex) {
         0 -> HomePage(navController)

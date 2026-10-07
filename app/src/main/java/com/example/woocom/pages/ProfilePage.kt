@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
@@ -42,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -85,49 +83,54 @@ fun ProfilePage(navController: NavHostController) {
         topBar = {
             CenterAlignedTopAppBar(
                 title = { Text("My Profile", color = PrimaryText) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                colors =
+                    TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { paddingValues ->
         PremiumBackground {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
             ) {
                 when {
                     isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    loadError != null -> ErrorState(
-                        message = loadError!!,
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-
-                    else -> Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        ProfileHeader(user = userModel)
-                        Spacer(modifier = Modifier.height(24.dp))
-                        ProfileMenu(
-                            navController = navController,
-                            isLoggingOut = isLoggingOut,
-                            signedIn = userModel != null,
-                            onLogoutClicked = {
-                                isLoggingOut = true
-                                FirebaseAuth.getInstance().signOut()
-                                navController.navigate(Routes.AUTH) {
-                                    popUpTo(Routes.HOME) { inclusive = true }
-                                }
-                            }
+                    loadError != null ->
+                        ErrorState(
+                            message = loadError!!,
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
                         )
-                    }
+
+                    else ->
+                        Column(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            ProfileHeader(user = userModel)
+                            Spacer(modifier = Modifier.height(24.dp))
+                            ProfileMenu(
+                                navController = navController,
+                                isLoggingOut = isLoggingOut,
+                                signedIn = userModel != null,
+                                onLogoutClicked = {
+                                    isLoggingOut = true
+                                    FirebaseAuth.getInstance().signOut()
+                                    navController.navigate(Routes.AUTH) {
+                                        popUpTo(Routes.HOME) { inclusive = true }
+                                    }
+                                },
+                            )
+                        }
                 }
             }
         }
@@ -138,29 +141,30 @@ fun ProfilePage(navController: NavHostController) {
 private fun ProfileHeader(user: UserModel?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = Icons.Default.AccountCircle,
             contentDescription = null,
-            modifier = Modifier
-                .size(100.dp)
-                .background(GreenPrimary.copy(alpha = 0.12f), CircleShape)
-                .padding(12.dp),
-            tint = GreenPrimary
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .background(GreenPrimary.copy(alpha = 0.12f), CircleShape)
+                    .padding(12.dp),
+            tint = GreenPrimary,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = user?.name ?: "Guest User",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            color = PrimaryText
+            color = PrimaryText,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = user?.email ?: "No email provided",
             fontSize = 16.sp,
-            color = SecondaryText
+            color = SecondaryText,
         )
     }
 }
@@ -170,14 +174,14 @@ private fun ProfileMenu(
     navController: NavHostController,
     isLoggingOut: Boolean,
     signedIn: Boolean,
-    onLogoutClicked: () -> Unit
+    onLogoutClicked: () -> Unit,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(4.dp),
     ) {
         Column {
             ProfileMenuItem(icon = Icons.AutoMirrored.Filled.ReceiptLong, text = "My Orders", onClick = {
@@ -199,27 +203,29 @@ private fun ProfileMenu(
     if (signedIn) {
         Button(
             onClick = onLogoutClicked,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GreenPrimary,
-                contentColor = Color(0xFF141414)
-            ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary,
+                    contentColor = Color(0xFF141414),
+                ),
             shape = RoundedCornerShape(14.dp),
-            enabled = !isLoggingOut
+            enabled = !isLoggingOut,
         ) {
             if (isLoggingOut) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     color = Color(0xFF141414),
-                    strokeWidth = 2.dp
+                    strokeWidth = 2.dp,
                 )
             } else {
                 Text(
                     text = "Log Out",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
@@ -230,49 +236,56 @@ private fun ProfileMenu(
                     popUpTo(Routes.HOME) { inclusive = true }
                 }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GreenPrimary,
-                contentColor = Color(0xFF141414)
-            ),
-            shape = RoundedCornerShape(14.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary,
+                    contentColor = Color(0xFF141414),
+                ),
+            shape = RoundedCornerShape(14.dp),
         ) {
             Text(
                 text = "Sign In",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
 }
 
 @Composable
-private fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
+private fun ProfileMenuItem(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit = {},
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = GreenPrimary.copy(alpha = 0.8f)
+            tint = GreenPrimary.copy(alpha = 0.8f),
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = text,
             fontSize = 16.sp,
             color = PrimaryText,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = SecondaryText
+            tint = SecondaryText,
         )
     }
 }

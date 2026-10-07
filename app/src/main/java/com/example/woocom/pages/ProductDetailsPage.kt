@@ -74,7 +74,10 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductDetailsPage(navController: NavHostController, productId: String) {
+fun ProductDetailsPage(
+    navController: NavHostController,
+    productId: String,
+) {
     var product by remember { mutableStateOf<ProductModel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
@@ -103,33 +106,37 @@ fun ProductDetailsPage(navController: NavHostController, productId: String) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = PrimaryText
+                                tint = PrimaryText,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        navigationIconContentColor = PrimaryText
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            navigationIconContentColor = PrimaryText,
+                        ),
                 )
-            }
+            },
         ) { paddingValues ->
             Box(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
-                    )
+                    isLoading ->
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = GreenPrimary,
+                        )
 
-                    product == null -> ErrorState(
-                        message = loadError ?: "Product not found",
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    product == null ->
+                        ErrorState(
+                            message = loadError ?: "Product not found",
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
                     else -> ProductContent(product = product!!)
                 }
@@ -144,10 +151,11 @@ private fun ProductContent(product: ProductModel) {
     val addToCart = rememberAddToCart()
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp),
     ) {
         if (product.images.isNotEmpty()) {
             ImageCarouselWithFavorite(images = product.images, productId = product.id)
@@ -159,7 +167,7 @@ private fun ProductContent(product: ProductModel) {
             text = product.title,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = PrimaryText
+            color = PrimaryText,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -169,7 +177,7 @@ private fun ProductContent(product: ProductModel) {
                 text = "₹${product.price}",
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                color = GreenPrimary
+                color = GreenPrimary,
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -178,7 +186,7 @@ private fun ProductContent(product: ProductModel) {
                 text = "₹${product.actualPrice}",
                 fontSize = 16.sp,
                 color = SecondaryText,
-                style = TextStyle(textDecoration = TextDecoration.LineThrough)
+                style = TextStyle(textDecoration = TextDecoration.LineThrough),
             )
         }
 
@@ -187,7 +195,7 @@ private fun ProductContent(product: ProductModel) {
         if (product.otherDetails.isNotEmpty()) {
             InfoCard(
                 title = "Overview",
-                content = product.otherDetails.map { "${it.key}: ${it.value}" }
+                content = product.otherDetails.map { "${it.key}: ${it.value}" },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -195,26 +203,28 @@ private fun ProductContent(product: ProductModel) {
 
         InfoCard(
             title = "Description",
-            content = listOf(product.description.ifBlank { "No description available" })
+            content = listOf(product.description.ifBlank { "No description available" }),
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = { addToCart(product.id) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GreenPrimary,
-                contentColor = com.example.woocom.ui.theme.DarkText
-            ),
-            shape = RoundedCornerShape(14.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary,
+                    contentColor = com.example.woocom.ui.theme.DarkText,
+                ),
+            shape = RoundedCornerShape(14.dp),
         ) {
             Text(
                 text = "Add to Cart",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
 
@@ -223,17 +233,20 @@ private fun ProductContent(product: ProductModel) {
 }
 
 @Composable
-private fun InfoCard(title: String, content: List<String>) {
+private fun InfoCard(
+    title: String,
+    content: List<String>,
+) {
     NeonGlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = title,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = PrimaryText
+                color = PrimaryText,
             )
             Spacer(modifier = Modifier.height(8.dp))
             content.forEach { item ->
@@ -241,7 +254,7 @@ private fun InfoCard(title: String, content: List<String>) {
                     text = item,
                     fontSize = 16.sp,
                     color = SecondaryText,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    modifier = Modifier.padding(vertical = 4.dp),
                 )
             }
         }
@@ -249,7 +262,10 @@ private fun InfoCard(title: String, content: List<String>) {
 }
 
 @Composable
-private fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
+private fun ImageCarouselWithFavorite(
+    images: List<String>,
+    productId: String,
+) {
     val pagerState = rememberPagerState(pageCount = { images.size })
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -276,21 +292,23 @@ private fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
             HorizontalPager(
                 state = pagerState,
                 pageSpacing = 16.dp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(380.dp)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(380.dp),
             ) { page ->
                 GlassCard(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(4.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(4.dp),
+                    shape = RoundedCornerShape(16.dp),
                 ) {
                     AsyncImage(
                         model = images[page],
                         contentDescription = "Product image ${page + 1}",
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -299,10 +317,11 @@ private fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
 
             DotsIndicator(
                 dotCount = images.size,
-                type = ShiftIndicatorType(
-                    dotsGraphic = DotGraphic(color = Color.Gray)
-                ),
-                pagerState = pagerState
+                type =
+                    ShiftIndicatorType(
+                        dotsGraphic = DotGraphic(color = Color.Gray),
+                    ),
+                pagerState = pagerState,
             )
         }
 
@@ -311,27 +330,29 @@ private fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
                 val target = !isFavorite
                 isFavorite = target
                 scope.launch {
-                    val outcome = resourceOf {
-                        ServiceLocator.userRepository.setFavorite(productId, target)
-                    }
+                    val outcome =
+                        resourceOf {
+                            ServiceLocator.userRepository.setFavorite(productId, target)
+                        }
                     if (outcome is Resource.Error) {
                         isFavorite = !target
                         AppUtil.showToast(context, "Could not update favourites")
                     }
                 }
             },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 24.dp, bottom = 70.dp)
-                .size(48.dp)
-                .background(PrimaryText.copy(alpha = 0.9f), CircleShape)
-                .zIndex(10f)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 70.dp)
+                    .size(48.dp)
+                    .background(PrimaryText.copy(alpha = 0.9f), CircleShape)
+                    .zIndex(10f),
         ) {
             Icon(
                 imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = "Toggle favourite",
                 tint = if (isFavorite) FavoriteRed else Color.Gray,
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(28.dp),
             )
         }
     }

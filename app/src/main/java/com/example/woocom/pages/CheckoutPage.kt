@@ -35,8 +35,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -82,20 +82,24 @@ fun CheckoutPage(navController: NavHostController) {
     LaunchedEffect(attempt) {
         isLoading = true
         loadError = null
-        val result = resourceOf {
-            val uid = ServiceLocator.userRepository.currentUserId()
-                ?: throw IllegalStateException("Please sign in to continue.")
-            val user = ServiceLocator.userRepository.currentUser()
-                ?: throw IllegalStateException("Your account could not be loaded.")
-            val products = ServiceLocator.productRepository
-                .productsByIds(user.cartItems.keys)
-                .associateBy { it.id }
-            userId = uid
-            userName = user.name
-            user.cartItems.map { (productId, quantity) ->
-                CartLine(productId, quantity, products[productId])
+        val result =
+            resourceOf {
+                val uid =
+                    ServiceLocator.userRepository.currentUserId()
+                        ?: throw IllegalStateException("Please sign in to continue.")
+                val user =
+                    ServiceLocator.userRepository.currentUser()
+                        ?: throw IllegalStateException("Your account could not be loaded.")
+                val products =
+                    ServiceLocator.productRepository
+                        .productsByIds(user.cartItems.keys)
+                        .associateBy { it.id }
+                userId = uid
+                userName = user.name
+                user.cartItems.map { (productId, quantity) ->
+                    CartLine(productId, quantity, products[productId])
+                }
             }
-        }
         lines = result.dataOrNull ?: emptyList()
         loadError = result.errorMessageOrNull
         isLoading = false
@@ -112,52 +116,57 @@ fun CheckoutPage(navController: NavHostController) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = PrimaryText
+                                tint = PrimaryText,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = PrimaryText,
-                        navigationIconContentColor = PrimaryText
-                    )
+                    colors =
+                        TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            titleContentColor = PrimaryText,
+                            navigationIconContentColor = PrimaryText,
+                        ),
                 )
-            }
+            },
         ) { padding ->
             Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
             ) {
                 when {
                     isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    loadError != null -> ErrorState(
-                        message = loadError!!,
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    loadError != null ->
+                        ErrorState(
+                            message = loadError!!,
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    lines.isEmpty() -> Text(
-                        text = "Your cart is empty",
-                        modifier = Modifier.align(Alignment.Center),
-                        color = SecondaryText
-                    )
+                    lines.isEmpty() ->
+                        Text(
+                            text = "Your cart is empty",
+                            modifier = Modifier.align(Alignment.Center),
+                            color = SecondaryText,
+                        )
 
-                    else -> CheckoutContent(
-                        userName = userName,
-                        lines = lines,
-                        onPay = {
-                            val activity = context.findActivity()
-                            if (activity == null) {
-                                AppUtil.showToast(context, "Payment is unavailable right now")
-                                return@CheckoutContent
-                            }
-                            scope.launch {
-                                beginPayment(context, userId, lines, activity)
-                            }
-                        }
-                    )
+                    else ->
+                        CheckoutContent(
+                            userName = userName,
+                            lines = lines,
+                            onPay = {
+                                val activity = context.findActivity()
+                                if (activity == null) {
+                                    AppUtil.showToast(context, "Payment is unavailable right now")
+                                    return@CheckoutContent
+                                }
+                                scope.launch {
+                                    beginPayment(context, userId, lines, activity)
+                                }
+                            },
+                        )
                 }
             }
         }
@@ -176,23 +185,24 @@ private suspend fun beginPayment(
     context: Context,
     userId: String,
     lines: List<CartLine>,
-    activity: Activity
+    activity: Activity,
 ) {
     val subtotal = lines.sumOf { AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity) }
     val totalAmount = subtotal + SHIPPING_COST
 
-    val orderId = resourceOf {
-        ServiceLocator.userRepository.placeOrder(
-            OrderModel(
-                userId = userId,
-                amount = totalAmount,
-                itemCount = lines.sumOf { it.quantity }.toInt(),
-                items = lines.associate { it.productId to it.quantity },
-                status = OrderModel.STATUS_PENDING,
-                createdAt = System.currentTimeMillis()
+    val orderId =
+        resourceOf {
+            ServiceLocator.userRepository.placeOrder(
+                OrderModel(
+                    userId = userId,
+                    amount = totalAmount,
+                    itemCount = lines.sumOf { it.quantity }.toInt(),
+                    items = lines.associate { it.productId to it.quantity },
+                    status = OrderModel.STATUS_PENDING,
+                    createdAt = System.currentTimeMillis(),
+                ),
             )
-        )
-    }.dataOrNull
+        }.dataOrNull
 
     if (orderId == null) {
         AppUtil.showToast(context, "Could not start payment, please try again.")
@@ -207,34 +217,36 @@ private suspend fun beginPayment(
 private fun CheckoutContent(
     userName: String,
     lines: List<CartLine>,
-    onPay: () -> Unit
+    onPay: () -> Unit,
 ) {
     val subtotal = lines.sumOf { AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity) }
     val totalAmount = subtotal + SHIPPING_COST
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(16.dp),
     ) {
         Text(
             text = "Hello, $userName",
             style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
-            color = PrimaryText
+            color = PrimaryText,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
         ) {
             items(lines, key = { it.productId }) { line ->
                 CartItemView(
                     productId = line.productId,
                     quantity = line.quantity,
-                    product = line.product
+                    product = line.product,
                 )
             }
         }
@@ -245,14 +257,15 @@ private fun CheckoutContent(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = CardSurface),
             border = BorderStroke(0.5.dp, NeonBorder),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(16.dp),
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
                     Text(text = "Subtotal", fontSize = 14.sp, color = SecondaryText)
@@ -261,7 +274,7 @@ private fun CheckoutContent(
                     Text(
                         text = "Amount Payable",
                         fontSize = 16.sp,
-                        color = PrimaryText
+                        color = PrimaryText,
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
@@ -269,14 +282,14 @@ private fun CheckoutContent(
                     Text(
                         text = AppUtil.formatPrice(SHIPPING_COST),
                         fontSize = 14.sp,
-                        color = SecondaryText
+                        color = SecondaryText,
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = AppUtil.formatPrice(totalAmount),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = GreenPrimary
+                        color = GreenPrimary,
                     )
                 }
             }
@@ -286,36 +299,42 @@ private fun CheckoutContent(
 
         Button(
             onClick = onPay,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = GreenPrimary,
-                contentColor = DarkText
-            ),
-            shape = RoundedCornerShape(14.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary,
+                    contentColor = DarkText,
+                ),
+            shape = RoundedCornerShape(14.dp),
         ) {
             Text(
                 text = "Pay ${AppUtil.formatPrice(totalAmount)}",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
     }
 }
 
 /** Launches the Razorpay checkout flow. */
-private fun startPayment(activity: Activity, amount: Double) {
+private fun startPayment(
+    activity: Activity,
+    amount: Double,
+) {
     val checkout = Checkout()
     checkout.setKeyID(BuildConfig.RAZORPAY_KEY_ID)
 
-    val options = JSONObject().apply {
-        put("name", "WooCom")
-        put("description", "Shopping payment")
-        put("amount", (amount * 100).toInt())
-        put("currency", "INR")
-        put("theme", JSONObject().put("color", "#A5E800"))
-    }
+    val options =
+        JSONObject().apply {
+            put("name", "WooCom")
+            put("description", "Shopping payment")
+            put("amount", (amount * 100).toInt())
+            put("currency", "INR")
+            put("theme", JSONObject().put("color", "#A5E800"))
+        }
 
     try {
         checkout.open(activity, options)
@@ -324,8 +343,9 @@ private fun startPayment(activity: Activity, amount: Double) {
     }
 }
 
-internal fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
-    is ContextWrapper -> baseContext.findActivity()
-    else -> null
-}
+internal fun Context.findActivity(): Activity? =
+    when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }

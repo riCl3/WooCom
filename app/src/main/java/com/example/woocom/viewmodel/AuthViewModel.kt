@@ -20,8 +20,11 @@ import java.io.IOException
 /** Screen-level authentication state. */
 sealed interface AuthUiState {
     data object Idle : AuthUiState
+
     data object Submitting : AuthUiState
+
     data object Success : AuthUiState
+
     data class Failure(val message: String) : AuthUiState
 }
 
@@ -33,20 +36,26 @@ sealed interface AuthUiState {
  * rather than surfacing raw SDK text.
  */
 class AuthViewModel : ViewModel() {
-
     private val auth: FirebaseAuth = Firebase.auth
 
     private val _state = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val state: StateFlow<AuthUiState> = _state.asStateFlow()
 
-    fun login(email: String, password: String) {
+    fun login(
+        email: String,
+        password: String,
+    ) {
         _state.value = AuthUiState.Submitting
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { _state.value = AuthUiState.Success }
             .addOnFailureListener { _state.value = AuthUiState.Failure(friendlyMessage(it)) }
     }
 
-    fun signup(name: String, email: String, password: String) {
+    fun signup(
+        name: String,
+        email: String,
+        password: String,
+    ) {
         _state.value = AuthUiState.Submitting
         auth.createUserWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
@@ -76,12 +85,13 @@ class AuthViewModel : ViewModel() {
         if (_state.value is AuthUiState.Failure) _state.value = AuthUiState.Idle
     }
 
-    private fun friendlyMessage(error: Throwable): String = when (error) {
-        is FirebaseAuthInvalidUserException -> "No account found with that email"
-        is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password"
-        is FirebaseAuthUserCollisionException -> "An account with that email already exists"
-        is FirebaseAuthWeakPasswordException -> "Password must be at least 6 characters"
-        is IOException -> "Can't reach the server — check your connection"
-        else -> error.localizedMessage ?: "Something went wrong"
-    }
+    private fun friendlyMessage(error: Throwable): String =
+        when (error) {
+            is FirebaseAuthInvalidUserException -> "No account found with that email"
+            is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password"
+            is FirebaseAuthUserCollisionException -> "An account with that email already exists"
+            is FirebaseAuthWeakPasswordException -> "Password must be at least 6 characters"
+            is IOException -> "Can't reach the server — check your connection"
+            else -> error.localizedMessage ?: "Something went wrong"
+        }
 }

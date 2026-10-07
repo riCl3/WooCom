@@ -56,11 +56,13 @@ import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
-import com.example.woocom.ui.theme.SecondaryText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchPage(navController: NavController, query: String) {
+fun SearchPage(
+    navController: NavController,
+    query: String,
+) {
     var searchResults by remember { mutableStateOf<List<ProductModel>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
@@ -91,58 +93,64 @@ fun SearchPage(navController: NavController, query: String) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = PrimaryText
+                            tint = PrimaryText,
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = PrimaryText,
-                    navigationIconContentColor = PrimaryText
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = PrimaryText,
+                        navigationIconContentColor = PrimaryText,
+                    ),
             )
         },
-        containerColor = Color.Transparent
+        containerColor = Color.Transparent,
     ) { padding ->
         PremiumBackground {
             Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize()
+                modifier =
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
             ) {
                 when {
                     isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    loadError != null -> ErrorState(
-                        message = loadError!!,
-                        onRetry = { attempt++ },
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    loadError != null ->
+                        ErrorState(
+                            message = loadError!!,
+                            onRetry = { attempt++ },
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    searchResults.isEmpty() -> EmptyState(
-                        icon = Icons.Default.Search,
-                        title = "No items found for \"$query\"",
-                        subtitle = "Try a different keyword or category",
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    searchResults.isEmpty() ->
+                        EmptyState(
+                            icon = Icons.Default.Search,
+                            title = "No items found for \"$query\"",
+                            subtitle = "Try a different keyword or category",
+                            modifier = Modifier.align(Alignment.Center),
+                        )
 
-                    else -> LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(searchResults, key = { it.id }) { product ->
-                            SearchProductItem(
-                                product = product,
-                                onClick = {
-                                    navController.navigate(Routes.productDetails(product.id)) {
-                                        launchSingleTop = true
-                                    }
-                                }
-                            )
+                    else ->
+                        LazyColumn(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(searchResults, key = { it.id }) { product ->
+                                SearchProductItem(
+                                    product = product,
+                                    onClick = {
+                                        navController.navigate(Routes.productDetails(product.id)) {
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                )
+                            }
                         }
-                    }
                 }
             }
         }
@@ -150,28 +158,33 @@ fun SearchPage(navController: NavController, query: String) {
 }
 
 @Composable
-private fun SearchProductItem(product: ProductModel, onClick: () -> Unit) {
+private fun SearchProductItem(
+    product: ProductModel,
+    onClick: () -> Unit,
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(2.dp),
         colors = CardDefaults.cardColors(containerColor = CardSurface),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder)
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(GreenPrimary.copy(alpha = 0.06f)),
-                contentScale = ContentScale.Crop
+                modifier =
+                    Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(GreenPrimary.copy(alpha = 0.06f)),
+                contentScale = ContentScale.Crop,
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column {
@@ -180,13 +193,13 @@ private fun SearchProductItem(product: ProductModel, onClick: () -> Unit) {
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryText,
-                    maxLines = 2
+                    maxLines = 2,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "₹${product.price}",
                     fontSize = 14.sp,
-                    color = GreenPrimary
+                    color = GreenPrimary,
                 )
             }
         }

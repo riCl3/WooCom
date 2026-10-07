@@ -19,7 +19,7 @@ data class HomeCatalogue(
     val banners: List<String> = emptyList(),
     val categories: List<CategoryModel> = emptyList(),
     val products: List<ProductModel> = emptyList(),
-    val userName: String = ""
+    val userName: String = "",
 ) {
     val deals: List<ProductModel> get() = products.take(DEAL_LIMIT)
     val featured: List<ProductModel> get() = products.take(FEATURED_LIMIT)
@@ -43,9 +43,8 @@ data class HomeCatalogue(
  */
 class HomeViewModel(
     private val catalogue: ProductRepository = ServiceLocator.productRepository,
-    private val users: UserRepository = ServiceLocator.userRepository
+    private val users: UserRepository = ServiceLocator.userRepository,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow<Resource<HomeCatalogue>>(Resource.Loading)
     val state: StateFlow<Resource<HomeCatalogue>> = _state.asStateFlow()
 
@@ -56,17 +55,18 @@ class HomeViewModel(
     fun refresh() {
         viewModelScope.launch {
             _state.value = Resource.Loading
-            _state.value = resourceOf {
-                val existing = (_state.value as? Resource.Success)?.data
-                // One product query feeds all four carousels instead of four queries.
-                val products = catalogue.products(PRODUCT_FETCH_LIMIT)
-                HomeCatalogue(
-                    banners = catalogue.banners(),
-                    categories = catalogue.categories(),
-                    products = products,
-                    userName = existing?.userName ?: users.currentUser()?.name.orEmpty()
-                )
-            }
+            _state.value =
+                resourceOf {
+                    val existing = (_state.value as? Resource.Success)?.data
+                    // One product query feeds all four carousels instead of four queries.
+                    val products = catalogue.products(PRODUCT_FETCH_LIMIT)
+                    HomeCatalogue(
+                        banners = catalogue.banners(),
+                        categories = catalogue.categories(),
+                        products = products,
+                        userName = existing?.userName ?: users.currentUser()?.name.orEmpty(),
+                    )
+                }
         }
     }
 

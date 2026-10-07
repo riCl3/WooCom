@@ -43,39 +43,40 @@ fun AddressPage(navController: NavController) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = PrimaryText
+                                tint = PrimaryText,
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                 )
-            }
+            },
         ) { padding ->
             Box(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
                         tint = SecondaryText,
-                        modifier = Modifier.size(72.dp)
+                        modifier = Modifier.size(72.dp),
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "No addresses saved",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = PrimaryText
+                        color = PrimaryText,
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "Add an address at checkout to get started",
                         fontSize = 14.sp,
-                        color = SecondaryText
+                        color = SecondaryText,
                     )
                 }
             }
