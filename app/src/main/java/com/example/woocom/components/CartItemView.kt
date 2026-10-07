@@ -32,7 +32,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.woocom.AppUtil
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.CardSurface
@@ -112,7 +111,7 @@ private fun CartItemContent(
                         .background(Color.LightGray),
             ) {
                 if (product.images.isNotEmpty()) {
-                    AsyncImage(
+                    AppImage(
                         model = product.images.first(),
                         contentDescription = product.title,
                         contentScale = ContentScale.Crop,

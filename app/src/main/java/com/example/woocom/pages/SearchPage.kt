@@ -43,8 +43,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
 import com.example.woocom.Routes
+import com.example.woocom.components.AppImage
 import com.example.woocom.components.EmptyState
 import com.example.woocom.components.ErrorState
 import com.example.woocom.components.LoadingState
@@ -176,7 +176,7 @@ private fun SearchProductItem(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
+            AppImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 modifier =

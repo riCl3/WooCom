@@ -34,7 +34,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.example.woocom.Routes
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.DarkSurface
@@ -80,7 +79,7 @@ fun ProductItemView(
                         .clip(RoundedCornerShape(12.dp))
                         .background(GreenPrimary.copy(alpha = 0.06f)),
             ) {
-                AsyncImage(
+                AppImage(
                     model = product.images.firstOrNull(),
                     contentDescription = product.title,
                     modifier = Modifier.fillMaxSize(),

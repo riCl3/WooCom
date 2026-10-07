@@ -22,7 +22,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.example.woocom.Routes
 import com.example.woocom.model.CategoryModel
 import com.example.woocom.ui.theme.PrimaryText
@@ -64,7 +63,7 @@ fun CategoryItem(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(12.dp),
         ) {
-            AsyncImage(
+            AppImage(
                 model = category.imageUrl,
                 contentDescription = category.Name,
                 contentScale = ContentScale.Fit,

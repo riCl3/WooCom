@@ -32,7 +32,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.example.woocom.Routes
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.GradientEnd
@@ -94,7 +93,7 @@ fun DealProductItem(
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-            AsyncImage(
+            AppImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
@@ -194,7 +193,7 @@ fun FeaturedProductItem(
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-            AsyncImage(
+            AppImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
@@ -263,7 +262,7 @@ fun RecentlyViewedItem(
         shape = RoundedCornerShape(8.dp),
     ) {
         Column(modifier = Modifier.padding(6.dp)) {
-            AsyncImage(
+            AppImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,
@@ -332,7 +331,7 @@ fun RecommendedProductItem(
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
-            AsyncImage(
+            AppImage(
                 model = product.images.firstOrNull(),
                 contentDescription = product.title,
                 contentScale = ContentScale.Crop,

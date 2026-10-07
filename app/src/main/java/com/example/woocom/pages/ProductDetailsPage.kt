@@ -51,8 +51,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
-import coil.compose.AsyncImage
 import com.example.woocom.AppUtil
+import com.example.woocom.components.AppImage
 import com.example.woocom.components.ErrorState
 import com.example.woocom.components.GlassCard
 import com.example.woocom.components.NeonGlassCard
@@ -304,7 +304,7 @@ private fun ImageCarouselWithFavorite(
                             .padding(4.dp),
                     shape = RoundedCornerShape(16.dp),
                 ) {
-                    AsyncImage(
+                    AppImage(
                         model = images[page],
                         contentDescription = "Product image ${page + 1}",
                         contentScale = ContentScale.Crop,

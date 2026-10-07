@@ -43,8 +43,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.woocom.AppUtil
+import com.example.woocom.components.AppImage
 import com.example.woocom.components.EmptyState
 import com.example.woocom.components.ErrorState
 import com.example.woocom.components.LoadingState
@@ -185,7 +185,7 @@ private fun FavoriteItemCard(
                         .clip(RoundedCornerShape(12.dp))
                         .background(GreenPrimary.copy(alpha = 0.08f)),
             ) {
-                AsyncImage(
+                AppImage(
                     model = product.images.firstOrNull(),
                     contentDescription = product.title,
                     modifier = Modifier.fillMaxSize(),

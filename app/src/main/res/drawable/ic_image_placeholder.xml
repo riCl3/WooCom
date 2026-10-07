@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Neutral stand-in shown while a product/banner image loads or when the URL is dead. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#1E2A1E"
+        android:pathData="M0,0h48v48h-48z" />
+    <path
+        android:fillColor="#3A4A3A"
+        android:pathData="M8,34l10,-12l7,8l5,-6l10,10z" />
+    <path
+        android:fillColor="#A5E800"
+        android:pathData="M34,12m-4,0a4,4 0,1 1,8 0a4,4 0,1 1,-8 0" />
+</vector>

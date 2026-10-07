@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.tbuonomo.viewpagerdotsindicator.compose.DotsIndicator
 import com.tbuonomo.viewpagerdotsindicator.compose.model.DotGraphic
 import com.tbuonomo.viewpagerdotsindicator.compose.type.ShiftIndicatorType
@@ -47,7 +46,7 @@ fun BannerView(
                     .fillMaxWidth()
                     .height(150.dp),
         ) { index ->
-            AsyncImage(
+            AppImage(
                 model = banners.getOrNull(index),
                 contentDescription = "Promotional banner ${index + 1}",
                 contentScale = ContentScale.Crop,
