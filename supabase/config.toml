@@ -1,0 +1,39 @@
+# Local Supabase configuration for WooCom.
+# Generated to match what `supabase init` produces for a new project; safe defaults are
+# used for every key that is not listed. See `supabase/config.toml` docs for the full set.
+project_id = "woocom"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[auth]
+enabled = true
+# The Android app signs in with plain email/password and does not handle deep links
+# today, so auto-confirm keeps local development unblocked.
+enable_confirmations = false
+site_url = "http://localhost:3000"
+
+[auth.email]
+enable_signup = true
+
+[functions.create-razorpay-order]
+verify_jwt = true
+
+[functions.verify-payment]
+verify_jwt = true

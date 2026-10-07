@@ -51,10 +51,10 @@ import com.example.woocom.components.CartItemView
 import com.example.woocom.components.ErrorState
 import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
+import com.example.woocom.data.CheckoutRequest
 import com.example.woocom.data.PaymentSession
 import com.example.woocom.data.ServiceLocator
 import com.example.woocom.data.resourceOf
-import com.example.woocom.model.OrderModel
 import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.DarkText
 import com.example.woocom.ui.theme.GreenPrimary
@@ -74,7 +74,6 @@ fun CheckoutPage(navController: NavHostController) {
 
     var lines by remember { mutableStateOf<List<CartLine>>(emptyList()) }
     var userName by remember { mutableStateOf("") }
-    var userId by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
     var loadError by remember { mutableStateOf<String?>(null) }
     var attempt by remember { mutableStateOf(0) }
@@ -84,9 +83,6 @@ fun CheckoutPage(navController: NavHostController) {
         loadError = null
         val result =
             resourceOf {
-                val uid =
-                    ServiceLocator.userRepository.currentUserId()
-                        ?: throw IllegalStateException("Please sign in to continue.")
                 val user =
                     ServiceLocator.userRepository.currentUser()
                         ?: throw IllegalStateException("Your account could not be loaded.")
@@ -94,7 +90,6 @@ fun CheckoutPage(navController: NavHostController) {
                     ServiceLocator.productRepository
                         .productsByIds(user.cartItems.keys)
                         .associateBy { it.id }
-                userId = uid
                 userName = user.name
                 user.cartItems.map { (productId, quantity) ->
                     CartLine(productId, quantity, products[productId])
@@ -163,7 +158,7 @@ fun CheckoutPage(navController: NavHostController) {
                                     return@CheckoutContent
                                 }
                                 scope.launch {
-                                    beginPayment(context, userId, lines, activity)
+                                    beginPayment(context, lines, activity)
                                 }
                             },
                         )
@@ -174,43 +169,40 @@ fun CheckoutPage(navController: NavHostController) {
 }
 
 /**
- * Creates the order in its `pending` state first, then opens Razorpay.
+ * Asks the backend to create the order in its `pending` state first, then opens Razorpay.
  *
- * The order document is the single source of truth for whether the payment succeeded;
- * [com.example.woocom.MainActivity] flips it to `paid`/`failed` from the Razorpay
- * callback, so a crash between "opened checkout" and "callback received" leaves a
- * recoverable `pending` row instead of a paid-looking order with no payment.
+ * The order is the single source of truth for whether the payment succeeded;
+ * [com.example.woocom.MainActivity] settles it from the Razorpay callback, so a crash
+ * between "opened checkout" and "callback received" leaves a recoverable `pending` row
+ * instead of a paid-looking order with no payment. Which backend computes the amount is
+ * decided inside [com.example.woocom.data.PaymentGateway].
  */
 private suspend fun beginPayment(
     context: Context,
-    userId: String,
     lines: List<CartLine>,
     activity: Activity,
 ) {
     val subtotal = lines.sumOf { AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity) }
     val totalAmount = subtotal + SHIPPING_COST
 
-    val orderId =
+    val session =
         resourceOf {
-            ServiceLocator.userRepository.placeOrder(
-                OrderModel(
-                    userId = userId,
+            ServiceLocator.paymentGateway.beginCheckout(
+                CheckoutRequest(
+                    items = lines.associate { it.productId to it.quantity },
                     amount = totalAmount,
                     itemCount = lines.sumOf { it.quantity }.toInt(),
-                    items = lines.associate { it.productId to it.quantity },
-                    status = OrderModel.STATUS_PENDING,
-                    createdAt = System.currentTimeMillis(),
                 ),
             )
         }.dataOrNull
 
-    if (orderId == null) {
+    if (session == null) {
         AppUtil.showToast(context, "Could not start payment, please try again.")
         return
     }
 
-    PaymentSession.pendingOrderId = orderId
-    startPayment(activity, totalAmount)
+    PaymentSession.session = session
+    startPayment(activity, session.amountPaise, session.razorpayOrderId)
 }
 
 @Composable
@@ -322,7 +314,8 @@ private fun CheckoutContent(
 /** Launches the Razorpay checkout flow. */
 private fun startPayment(
     activity: Activity,
-    amount: Double,
+    amountPaise: Int,
+    razorpayOrderId: String?,
 ) {
     val checkout = Checkout()
     checkout.setKeyID(BuildConfig.RAZORPAY_KEY_ID)
@@ -331,9 +324,12 @@ private fun startPayment(
         JSONObject().apply {
             put("name", "WooCom")
             put("description", "Shopping payment")
-            put("amount", (amount * 100).toInt())
+            put("amount", amountPaise)
             put("currency", "INR")
             put("theme", JSONObject().put("color", "#A5E800"))
+            // Present only when the server created the Razorpay order; Razorpay then
+            // settles against that order id and hands back its signature.
+            razorpayOrderId?.let { put("order_id", it) }
         }
 
     try {

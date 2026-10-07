@@ -31,18 +31,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.woocom.R
 import com.example.woocom.Routes
+import com.example.woocom.data.ServiceLocator
 import com.example.woocom.ui.theme.GradientEnd
 import com.example.woocom.ui.theme.GradientStart
 import com.example.woocom.ui.theme.NeonGreen
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavHostController) {
-    val isLoggedIn = Firebase.auth.currentUser != null
-    val nextDestination = if (isLoggedIn) Routes.HOME else Routes.AUTH
-
     // Gentle scale-in for the logo
     val transition = rememberInfiniteTransition()
     val logoScale by transition.animateFloat(
@@ -98,6 +94,10 @@ fun SplashScreen(navController: NavHostController) {
 
     LaunchedEffect(Unit) {
         delay(2000)
+        // Decided here rather than at composition time: Supabase restores its session
+        // from storage asynchronously, so asking earlier could log a signed-in user out.
+        val nextDestination =
+            if (ServiceLocator.authRepository.isSignedIn()) Routes.HOME else Routes.AUTH
         navController.navigate(nextDestination) {
             popUpTo(Routes.SPLASH) { inclusive = true }
         }

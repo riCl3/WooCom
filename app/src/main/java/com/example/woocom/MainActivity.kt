@@ -8,10 +8,19 @@ import androidx.lifecycle.lifecycleScope
 import com.example.woocom.data.PaymentSession
 import com.example.woocom.data.ServiceLocator
 import com.example.woocom.ui.theme.WooComTheme
-import com.razorpay.PaymentResultListener
+import com.razorpay.PaymentData
+import com.razorpay.PaymentResultWithDataListener
 import kotlinx.coroutines.launch
 
-class MainActivity : ComponentActivity(), PaymentResultListener {
+/**
+ * Owns the Razorpay callbacks and settles the pending order created by CheckoutPage.
+ *
+ * Only [PaymentResultWithDataListener] is implemented on purpose: the Razorpay SDK checks
+ * for [com.razorpay.PaymentResultListener] first and short-circuits to it when present,
+ * which would drop `PaymentData` — and with it the `razorpay_signature` the Supabase
+ * `verify-payment` function needs to re-derive the HMAC server-side.
+ */
+class MainActivity : ComponentActivity(), PaymentResultWithDataListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -22,29 +31,26 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
         }
     }
 
-    /**
-     * The Razorpay SDK calls back into the Activity that opened checkout, so this is
-     * where the pending order created by CheckoutPage is settled.
-     *
-     * Order of operations matters: the order is only flipped to `paid` before the cart
-     * is cleared, so a failure to write the order leaves the cart intact and the order
-     * recoverable rather than silently losing a purchase.
-     */
-    override fun onPaymentSuccess(razorpayPaymentId: String?) {
-        val orderId = PaymentSession.pendingOrderId
+    override fun onPaymentSuccess(
+        razorpayPaymentId: String?,
+        paymentData: PaymentData?,
+    ) {
+        val session = PaymentSession.session ?: return
+        val paymentId = paymentData?.paymentId ?: razorpayPaymentId.orEmpty()
+        val signature = paymentData?.signature
         lifecycleScope.launch {
-            if (orderId != null) {
-                runCatching {
-                    ServiceLocator.userRepository.markOrderPaid(orderId, orEmpty(razorpayPaymentId))
-                }.onFailure { failure ->
-                    AppUtil.showToast(
-                        this@MainActivity,
-                        "Payment received but could not be recorded: ${failure.localizedMessage}",
-                    )
-                }
+            runCatching {
+                ServiceLocator.paymentGateway.settlePayment(session, paymentId, signature)
+                // Only after the order is marked paid: if this write fails the cart stays
+                // intact and the purchase is recoverable rather than silently lost.
+                runCatching { ServiceLocator.userRepository.clearCart() }
+            }.onFailure { failure ->
+                AppUtil.showToast(
+                    this@MainActivity,
+                    "Payment received but could not be recorded: ${failure.localizedMessage}",
+                )
             }
-            runCatching { ServiceLocator.userRepository.clearCart() }
-            PaymentSession.pendingOrderId = null
+            PaymentSession.session = null
             AppUtil.showToast(this@MainActivity, "Payment Successful")
         }
     }
@@ -52,17 +58,14 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
     override fun onPaymentError(
         errorCode: Int,
         response: String?,
+        paymentData: PaymentData?,
     ) {
-        val orderId = PaymentSession.pendingOrderId
-        val reason = "code=$errorCode ${orEmpty(response)}".trim()
+        val session = PaymentSession.session ?: return
+        val reason = "code=$errorCode ${response.orEmpty()}".trim()
         lifecycleScope.launch {
-            if (orderId != null) {
-                runCatching { ServiceLocator.userRepository.markOrderFailed(orderId, reason) }
-            }
-            PaymentSession.pendingOrderId = null
+            runCatching { ServiceLocator.paymentGateway.failPayment(session, reason) }
+            PaymentSession.session = null
             AppUtil.showToast(this@MainActivity, "Payment Failed")
         }
     }
-
-    private fun orEmpty(value: String?): String = value.orEmpty()
 }

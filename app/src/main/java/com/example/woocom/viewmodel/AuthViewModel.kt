@@ -2,20 +2,16 @@ package com.example.woocom.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.woocom.data.AuthRepository
+import com.example.woocom.data.Resource
 import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.UserRepository
+import com.example.woocom.data.resourceOf
 import com.example.woocom.model.UserModel
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
-import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.auth.FirebaseAuthWeakPasswordException
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 /** Screen-level authentication state. */
 sealed interface AuthUiState {
@@ -32,12 +28,13 @@ sealed interface AuthUiState {
  * Authentication entry point.
  *
  * Exposes a single [StateFlow] instead of per-call callbacks so screens cannot forget to
- * clear their loading flag, and maps Firebase exceptions to messages a user can act on
- * rather than surfacing raw SDK text.
+ * clear their loading flag. Both [AuthRepository] implementations map their SDK's errors
+ * to user-facing messages, so this class holds no SDK-specific logic at all.
  */
-class AuthViewModel : ViewModel() {
-    private val auth: FirebaseAuth = Firebase.auth
-
+class AuthViewModel(
+    private val auth: AuthRepository = ServiceLocator.authRepository,
+    private val users: UserRepository = ServiceLocator.userRepository,
+) : ViewModel() {
     private val _state = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val state: StateFlow<AuthUiState> = _state.asStateFlow()
 
@@ -46,9 +43,9 @@ class AuthViewModel : ViewModel() {
         password: String,
     ) {
         _state.value = AuthUiState.Submitting
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { _state.value = AuthUiState.Success }
-            .addOnFailureListener { _state.value = AuthUiState.Failure(friendlyMessage(it)) }
+        viewModelScope.launch {
+            _state.value = toUiState(resourceOf { auth.signIn(email, password) })
+        }
     }
 
     fun signup(
@@ -57,23 +54,20 @@ class AuthViewModel : ViewModel() {
         password: String,
     ) {
         _state.value = AuthUiState.Submitting
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnSuccessListener { result ->
-                val userId = result.user?.uid
-                if (userId == null) {
-                    _state.value = AuthUiState.Failure("Could not create your account")
-                    return@addOnSuccessListener
+        viewModelScope.launch {
+            val result =
+                resourceOf {
+                    auth.signUp(name, email, password)
+                    // Profile write goes through the repository so the "one row/document
+                    // per uid" rule lives in exactly one place. Supabase provisions the
+                    // row from the signup trigger, so this is an idempotent merge there.
+                    val uid = auth.currentUserId()
+                    if (uid != null) {
+                        users.saveProfile(UserModel(name = name, email = email, userId = uid))
+                    }
                 }
-                val userModel = UserModel(name = name, email = email, userId = userId)
-                // Profile write goes through the repository so the document id rule
-                // (one doc per uid) lives in exactly one place.
-                viewModelScope.launch {
-                    runCatching { ServiceLocator.userRepository.saveProfile(userModel) }
-                        .onSuccess { _state.value = AuthUiState.Success }
-                        .onFailure { _state.value = AuthUiState.Failure(friendlyMessage(it)) }
-                }
-            }
-            .addOnFailureListener { _state.value = AuthUiState.Failure(friendlyMessage(it)) }
+            _state.value = toUiState(result)
+        }
     }
 
     /** Called once the screen has handled a success so the state can be reused. */
@@ -85,13 +79,9 @@ class AuthViewModel : ViewModel() {
         if (_state.value is AuthUiState.Failure) _state.value = AuthUiState.Idle
     }
 
-    private fun friendlyMessage(error: Throwable): String =
-        when (error) {
-            is FirebaseAuthInvalidUserException -> "No account found with that email"
-            is FirebaseAuthInvalidCredentialsException -> "Incorrect email or password"
-            is FirebaseAuthUserCollisionException -> "An account with that email already exists"
-            is FirebaseAuthWeakPasswordException -> "Password must be at least 6 characters"
-            is IOException -> "Can't reach the server — check your connection"
-            else -> error.localizedMessage ?: "Something went wrong"
+    private fun toUiState(result: Resource<Unit>): AuthUiState =
+        when (result) {
+            is Resource.Error -> AuthUiState.Failure(result.message)
+            else -> AuthUiState.Success
         }
 }

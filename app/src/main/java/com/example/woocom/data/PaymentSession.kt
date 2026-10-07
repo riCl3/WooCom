@@ -11,5 +11,5 @@ package com.example.woocom.data
  */
 object PaymentSession {
     @Volatile
-    var pendingOrderId: String? = null
+    var session: CheckoutSession? = null
 }

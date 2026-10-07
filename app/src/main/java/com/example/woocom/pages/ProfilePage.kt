@@ -38,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,7 +60,7 @@ import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +70,7 @@ fun ProfilePage(navController: NavHostController) {
     var loadError by remember { mutableStateOf<String?>(null) }
     var attempt by remember { mutableStateOf(0) }
     var isLoggingOut by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(attempt) {
         isLoading = true
@@ -124,9 +126,11 @@ fun ProfilePage(navController: NavHostController) {
                                 signedIn = userModel != null,
                                 onLogoutClicked = {
                                     isLoggingOut = true
-                                    FirebaseAuth.getInstance().signOut()
-                                    navController.navigate(Routes.AUTH) {
-                                        popUpTo(Routes.HOME) { inclusive = true }
+                                    scope.launch {
+                                        runCatching { ServiceLocator.authRepository.signOut() }
+                                        navController.navigate(Routes.AUTH) {
+                                            popUpTo(Routes.HOME) { inclusive = true }
+                                        }
                                     }
                                 },
                             )

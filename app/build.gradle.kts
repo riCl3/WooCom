@@ -4,11 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "com.example.woocom"
-    compileSdk = 35
+    // 36 is required by androidx.browser 1.10, pulled in by supabase-kt's auth module.
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.woocom"
@@ -26,6 +28,13 @@ android {
                 .orElse("rzp_test_XXXXXXXXXXXX")
                 .get()
         buildConfigField("String", "RAZORPAY_KEY_ID", "\"$razorpayKeyId\"")
+
+        // Supabase identifiers. Both are public (the anon key is shipped in every APK);
+        // the real protection is RLS. Leave them blank to keep running on Firestore.
+        val supabaseUrl = providers.gradleProperty("SUPABASE_URL").orElse("").get()
+        val supabaseAnonKey = providers.gradleProperty("SUPABASE_ANON_KEY").orElse("").get()
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     // Release signing is opt-in: point WOOCOM_KEYSTORE / WOOCOM_KEYSTORE_PASSWORD /
@@ -69,10 +78,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -82,6 +87,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
     }
 }
 
@@ -112,4 +123,13 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.razorpay.checkout)
+
+    // Supabase backend (see MIGRATION.md). Selected at runtime by ServiceLocator when
+    // SUPABASE_URL is configured; the Firestore implementations remain the fallback.
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.functions)
+    implementation(libs.ktor.client.okhttp)
+    implementation(libs.kotlinx.serialization.json)
 }
