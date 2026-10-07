@@ -1,4 +1,4 @@
-package com.example.woocom.screens
+﻿package com.example.woocom.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -84,7 +84,7 @@ fun AuthScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(36.dp))
 
             Button(
-                onClick = { navController.navigate(Routes.LOGIN) },
+                onClick = { navController.navigate(Routes.LOGIN) { launchSingleTop = true } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -104,7 +104,7 @@ fun AuthScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = { navController.navigate(Routes.SIGNUP) },
+                onClick = { navController.navigate(Routes.SIGNUP) { launchSingleTop = true } },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp),
@@ -129,7 +129,7 @@ fun AuthScreen(navController: NavHostController) {
                     fontSize = 14.sp,
                     color = SecondaryText
                 )
-                TextButton(onClick = { navController.navigate(Routes.LOGIN) }) {
+                TextButton(onClick = { navController.navigate(Routes.LOGIN) { launchSingleTop = true } }) {
                     Text(
                         text = "Sign in",
                         fontSize = 14.sp,

@@ -2,16 +2,13 @@ package com.example.woocom
 
 import android.content.Context
 import android.widget.Toast
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.firestore
 import java.util.Locale
 
 /**
- * Shared helper utilities: cart / favourites mutations against Firestore.
+ * Small, side-effect helpers shared across the UI layer.
  *
- * All operations read the currently signed-in user.
+ * Data access lives in `com.example.woocom.data.*` — this object deliberately holds no
+ * Firebase references so it can be unit-tested on the JVM.
  */
 object AppUtil {
 
@@ -19,9 +16,7 @@ object AppUtil {
         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
     }
 
-    /**
-     * Safely parses a currency string (e.g. "1,299.00") into a Double.
-     */
+    /** Safely parses a currency string (e.g. "1,299.00") into a Double. */
     fun parsePrice(price: String): Double {
         return try {
             price.replace(",", "").trim().toDouble()
@@ -30,86 +25,17 @@ object AppUtil {
         }
     }
 
-    fun formatPrice(amount: Double): String =
-        String.format(Locale.getDefault(), "₹%,.2f", amount)
+    /**
+     * Line total for one cart row.
+     *
+     * Product prices are stored as display strings in the backend (`price` is the
+     * selling price, `actualPrice` is the struck-through MRP), so every total in the
+     * app — cart subtotal, checkout amount, order amount — must go through here or the
+     * numbers drift apart.
+     */
+    fun lineTotal(sellingPrice: String, quantity: Long): Double =
+        parsePrice(sellingPrice) * quantity
 
-    /** Returns the current user id or null when not signed in. */
-    private fun currentUserId(): String? = FirebaseAuth.getInstance().currentUser?.uid
-
-    /** Document reference for the signed-in user, or null when signed out. */
-    fun userDocument(): com.google.firebase.firestore.DocumentReference? {
-        val uid = currentUserId() ?: return null
-        return Firebase.firestore.collection("user").document(uid)
-    }
-
-    fun addToCart(productId: String, context: Context) {
-        val userDoc = userDocument() ?: return
-        userDoc.get().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val currentCart = task.result.get("cartItems") as? Map<String, Long> ?: emptyMap()
-                val updatedQuantity = (currentCart[productId] ?: 0L) + 1L
-                userDoc.update("cartItems.$productId", updatedQuantity)
-                    .addOnCompleteListener { update ->
-                        val message =
-                            if (update.isSuccessful) "Item added to cart"
-                            else "Failed to add item to cart"
-                        showToast(context, message)
-                    }
-            }
-        }
-    }
-
-    fun removeFromCart(
-        productId: String,
-        context: Context,
-        onDone: ((Boolean) -> Unit)? = null
-    ) {
-        val userDoc = userDocument()
-        if (userDoc == null) {
-            showToast(context, "Please sign in first")
-            onDone?.invoke(false)
-            return
-        }
-        userDoc.update("cartItems.$productId", FieldValue.delete())
-            .addOnSuccessListener { onDone?.invoke(true) }
-            .addOnFailureListener {
-                if (onDone == null) showToast(context, "Failed to remove item from cart")
-                onDone?.invoke(false)
-            }
-    }
-
-    fun addToFavorites(productId: String, context: Context) {
-        val userDoc = userDocument() ?: return
-        userDoc.update("favorites.$productId", true)
-            .addOnCompleteListener { task ->
-                val message =
-                    if (task.isSuccessful) "Added to favourites"
-                    else "Failed to add to favourites"
-                showToast(context, message)
-            }
-    }
-
-    fun removeFromFavorites(productId: String, context: Context) {
-        val userDoc = userDocument() ?: return
-        userDoc.update("favorites.$productId", FieldValue.delete())
-            .addOnCompleteListener { task ->
-                val message =
-                    if (task.isSuccessful) "Removed from favourites"
-                    else "Failed to remove from favourites"
-                showToast(context, message)
-            }
-    }
-
-    fun isFavorite(productId: String, callback: (Boolean) -> Unit) {
-        val userDoc = userDocument() ?: run {
-            callback(false)
-            return
-        }
-        userDoc.get().addOnSuccessListener { snapshot ->
-            val favorites = snapshot.get("favorites") as? Map<String, Boolean> ?: emptyMap()
-            callback(favorites[productId] == true)
-        }.addOnFailureListener {
-            callback(false)
-        }
-    }
+    fun formatPrice(amount: Double, locale: Locale = Locale.getDefault()): String =
+        String.format(locale, "₹%,.2f", amount)
 }

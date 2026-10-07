@@ -18,11 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,9 +41,6 @@ import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.PriceRed
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import com.google.firebase.firestore.toObject
 
 /** App-wide premium dark gradient backdrop. */
 @Composable
@@ -66,21 +59,31 @@ fun PremiumBackground(content: @Composable BoxScope.() -> Unit) {
 }
 
 @Composable
-fun DealsOfTheDayView(modifier: Modifier = Modifier, navController: NavHostController) {
-    ProductRow(modifier = modifier, limit = 10) { product ->
+fun DealsOfTheDayView(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    products: List<ProductModel>
+) {
+    ProductRow(modifier = modifier, products = products) { product ->
         DealProductItem(product = product, navController = navController)
     }
 }
 
 @Composable
 fun DealProductItem(product: ProductModel, navController: NavHostController) {
-    val discount = calculateDiscount(product.actualPrice, product.price)
+    val discount = remember(product.id) {
+        calculateDiscount(product.actualPrice, product.price)
+    }
 
     NeonGlassCard(
         modifier = Modifier
             .width(160.dp)
             .height(230.dp)
-            .clickable { navController.navigate(Routes.productDetails(product.id)) },
+            .clickable {
+                navController.navigate(Routes.productDetails(product.id)) {
+                    launchSingleTop = true
+                }
+            },
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
@@ -150,8 +153,12 @@ fun DealProductItem(product: ProductModel, navController: NavHostController) {
 }
 
 @Composable
-fun FeaturedProductsView(modifier: Modifier = Modifier, navController: NavHostController) {
-    ProductRow(modifier = modifier, limit = 10) { product ->
+fun FeaturedProductsView(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    products: List<ProductModel>
+) {
+    ProductRow(modifier = modifier, products = products) { product ->
         FeaturedProductItem(product = product, navController = navController)
     }
 }
@@ -162,7 +169,11 @@ fun FeaturedProductItem(product: ProductModel, navController: NavHostController)
         modifier = Modifier
             .width(140.dp)
             .height(190.dp)
-            .clickable { navController.navigate(Routes.productDetails(product.id)) },
+            .clickable {
+                navController.navigate(Routes.productDetails(product.id)) {
+                    launchSingleTop = true
+                }
+            },
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
@@ -204,8 +215,12 @@ fun FeaturedProductItem(product: ProductModel, navController: NavHostController)
 }
 
 @Composable
-fun RecentlyViewedView(modifier: Modifier = Modifier, navController: NavHostController) {
-    ProductRow(modifier = modifier, limit = 8) { product ->
+fun RecentlyViewedView(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    products: List<ProductModel>
+) {
+    ProductRow(modifier = modifier, products = products) { product ->
         RecentlyViewedItem(product = product, navController = navController)
     }
 }
@@ -216,7 +231,11 @@ fun RecentlyViewedItem(product: ProductModel, navController: NavHostController) 
         modifier = Modifier
             .width(100.dp)
             .height(150.dp)
-            .clickable { navController.navigate(Routes.productDetails(product.id)) },
+            .clickable {
+                navController.navigate(Routes.productDetails(product.id)) {
+                    launchSingleTop = true
+                }
+            },
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(modifier = Modifier.padding(6.dp)) {
@@ -258,8 +277,12 @@ fun RecentlyViewedItem(product: ProductModel, navController: NavHostController) 
 }
 
 @Composable
-fun RecommendedView(modifier: Modifier = Modifier, navController: NavHostController) {
-    ProductRow(modifier = modifier, limit = 10) { product ->
+fun RecommendedView(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    products: List<ProductModel>
+) {
+    ProductRow(modifier = modifier, products = products) { product ->
         RecommendedProductItem(product = product, navController = navController)
     }
 }
@@ -270,7 +293,11 @@ fun RecommendedProductItem(product: ProductModel, navController: NavHostControll
         modifier = Modifier
             .width(150.dp)
             .height(200.dp)
-            .clickable { navController.navigate(Routes.productDetails(product.id)) },
+            .clickable {
+                navController.navigate(Routes.productDetails(product.id)) {
+                    launchSingleTop = true
+                }
+            },
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
@@ -311,34 +338,20 @@ fun RecommendedProductItem(product: ProductModel, navController: NavHostControll
     }
 }
 
-/** Internal helper that loads a product carousel from Firestore. */
+/** Stateless carousel: the caller decides where the data comes from. */
 @Composable
 private fun ProductRow(
     modifier: Modifier,
-    limit: Int,
+    products: List<ProductModel>,
     itemBuilder: @Composable (ProductModel) -> Unit
 ) {
-    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
-
-    LaunchedEffect(Unit) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("products")
-            .limit(limit.toLong())
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    productList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(ProductModel::class.java)
-                    }
-                }
-            }
-    }
+    if (products.isEmpty()) return
 
     LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(productList) { item -> itemBuilder(item) }
+        items(products, key = { it.id }) { item -> itemBuilder(item) }
     }
 }
 

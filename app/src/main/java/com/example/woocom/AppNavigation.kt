@@ -51,9 +51,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             val productId = backStackEntry.arguments?.getString("productId").orEmpty()
             ProductDetailsPage(navController, productId)
         }
-        composable(Routes.CHECKOUT) { backStackEntry ->
-            val totalAmount = backStackEntry.arguments?.getString("totalAmount")?.toDoubleOrNull() ?: 0.0
-            CheckoutPage(navController, totalAmount)
+        composable(Routes.CHECKOUT) {
+            CheckoutPage(navController)
         }
         composable(Routes.SEARCH) { backStackEntry ->
             val query = backStackEntry.arguments?.getString("query").orEmpty()

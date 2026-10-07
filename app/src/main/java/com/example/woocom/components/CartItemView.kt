@@ -1,6 +1,7 @@
 package com.example.woocom.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,22 +19,15 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,16 +42,11 @@ import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.firestore
 
 /**
- * Single, reusable cart row.
- *
- * [product] may be supplied by the caller when the parent screen already loaded the
- * catalogue entry; when it is null the row resolves it itself. [onCartUpdated] is only
- * invoked after a mutation has actually completed so parent screens refresh real data.
+ * Single cart row. Purely presentational: data and mutations come from [CartViewModel]
+ * through the callbacks, so this composable holds no Firebase references and can be
+ * previewed / screenshot-tested in isolation.
  */
 @Composable
 fun CartItemView(
@@ -65,31 +54,9 @@ fun CartItemView(
     quantity: Long,
     modifier: Modifier = Modifier,
     product: ProductModel? = null,
-    onCartUpdated: (() -> Unit)? = null
+    onQuantityChanged: (Long) -> Unit = {},
+    onRemove: () -> Unit = {}
 ) {
-    var resolvedProduct by remember(productId) { mutableStateOf(product) }
-    var isLoading by remember(productId) { mutableStateOf(product == null) }
-    val context = LocalContext.current
-
-    LaunchedEffect(productId) {
-        if (resolvedProduct != null) {
-            isLoading = false
-            return@LaunchedEffect
-        }
-        Firebase.firestore
-            .collection("data")
-            .document("stock")
-            .collection("products")
-            .whereEqualTo("id", productId)
-            .get().addOnCompleteListener { task ->
-                isLoading = false
-                if (task.isSuccessful) {
-                    val result = task.result.toObjects(ProductModel::class.java)
-                    if (result.isNotEmpty()) resolvedProduct = result.first()
-                }
-            }
-    }
-
     Card(
         modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp),
@@ -97,46 +64,15 @@ fun CartItemView(
         border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            when {
-                isLoading -> LoadingBox(GreenPrimary)
-                resolvedProduct == null -> NotFoundBox()
-                else -> CartItemContent(
-                    product = resolvedProduct!!,
-                    quantity = quantity,
-                    onQuantityChanged = { newQuantity ->
-                        updateCartQuantity(productId, newQuantity) { succeeded ->
-                            AppUtil.showToast(
-                                context,
-                                if (succeeded) "Quantity updated" else "Could not update quantity"
-                            )
-                            if (succeeded) onCartUpdated?.invoke()
-                        }
-                    },
-                    onRemove = {
-                        AppUtil.removeFromCart(productId, context) { succeeded ->
-                            AppUtil.showToast(
-                                context,
-                                if (succeeded) "Item removed from cart" else "Could not remove item"
-                            )
-                            if (succeeded) onCartUpdated?.invoke()
-                        }
-                    }
-                )
-            }
+        when (product) {
+            null -> NotFoundBox()
+            else -> CartItemContent(
+                product = product,
+                quantity = quantity,
+                onQuantityChanged = onQuantityChanged,
+                onRemove = onRemove
+            )
         }
-    }
-}
-
-@Composable
-private fun LoadingBox(indicatorColor: Color) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator(color = indicatorColor)
     }
 }
 
@@ -148,7 +84,7 @@ private fun NotFoundBox() {
             .height(120.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text("Product not found", color = SecondaryText)
+        Text("This product is no longer available", color = SecondaryText)
     }
 }
 
@@ -218,7 +154,7 @@ private fun CartItemContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val itemTotal = AppUtil.parsePrice(product.price) * quantity
+                val itemTotal = AppUtil.lineTotal(product.price, quantity)
                 Text(
                     text = "Total: ${AppUtil.formatPrice(itemTotal)}",
                     fontSize = 14.sp,
@@ -236,10 +172,9 @@ private fun CartItemContent(
                         tint = if (quantity > 1) DarkText else Color.Gray,
                         enabled = quantity > 1,
                         background = if (quantity > 1) GreenPrimary.copy(alpha = 0.25f)
-                        else Color.Gray.copy(alpha = 0.1f)
-                    ) {
-                        onQuantityChanged(quantity - 1)
-                    }
+                        else Color.Gray.copy(alpha = 0.1f),
+                        onClick = { onQuantityChanged(quantity - 1) }
+                    )
 
                     Text(
                         text = "$quantity",
@@ -253,10 +188,9 @@ private fun CartItemContent(
                         contentDescription = "Increase quantity",
                         tint = DarkText,
                         enabled = true,
-                        background = GreenPrimary.copy(alpha = 0.25f)
-                    ) {
-                        onQuantityChanged(quantity + 1)
-                    }
+                        background = GreenPrimary.copy(alpha = 0.25f),
+                        onClick = { onQuantityChanged(quantity + 1) }
+                    )
                 }
             }
         }
@@ -271,7 +205,7 @@ private fun CartItemContent(
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Remove from cart",
+                contentDescription = "Remove ${product.title} from cart",
                 tint = Color.Gray
             )
         }
@@ -295,22 +229,5 @@ private fun QuantityButton(
             .background(background, RoundedCornerShape(8.dp))
     ) {
         Icon(imageVector = icon, contentDescription = contentDescription, tint = tint)
-    }
-}
-
-private fun updateCartQuantity(productId: String, quantity: Long, onDone: (Boolean) -> Unit) {
-    val userDoc = AppUtil.userDocument() ?: run {
-        onDone(false)
-        return
-    }
-
-    if (quantity <= 0) {
-        userDoc.update("cartItems.$productId", FieldValue.delete())
-            .addOnSuccessListener { onDone(true) }
-            .addOnFailureListener { onDone(false) }
-    } else {
-        userDoc.update("cartItems.$productId", quantity)
-            .addOnSuccessListener { onDone(true) }
-            .addOnFailureListener { onDone(false) }
     }
 }

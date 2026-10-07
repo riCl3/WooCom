@@ -50,40 +50,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.woocom.Routes
+import com.example.woocom.components.ErrorState
+import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
+import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.resourceOf
 import com.example.woocom.model.UserModel
 import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.tasks.await
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfilePage(navController: NavHostController) {
     var userModel by remember { mutableStateOf<UserModel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableStateOf(0) }
     var isLoggingOut by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        try {
-            val userId = Firebase.auth.currentUser?.uid
-            if (userId != null) {
-                val userSnapshot = Firebase.firestore.collection("user")
-                    .document(userId)
-                    .get()
-                    .await()
-                userModel = userSnapshot.toObject(UserModel::class.java)
-            }
-        } catch (e: Exception) {
-            // Keep userModel null; UI falls back to guest state
-        } finally {
-            isLoading = false
-        }
+    LaunchedEffect(attempt) {
+        isLoading = true
+        loadError = null
+        val result = resourceOf { ServiceLocator.userRepository.currentUser() }
+        userModel = result.dataOrNull
+        loadError = result.errorMessageOrNull
+        isLoading = false
     }
 
     Scaffold(
@@ -104,14 +99,11 @@ fun ProfilePage(navController: NavHostController) {
                     .padding(paddingValues)
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
-                    )
+                    isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
 
-                    userModel == null -> Text(
-                        text = "Could not load profile.",
-                        color = SecondaryText,
+                    loadError != null -> ErrorState(
+                        message = loadError!!,
+                        onRetry = { attempt++ },
                         modifier = Modifier.align(Alignment.Center)
                     )
 
@@ -126,9 +118,10 @@ fun ProfilePage(navController: NavHostController) {
                         ProfileMenu(
                             navController = navController,
                             isLoggingOut = isLoggingOut,
+                            signedIn = userModel != null,
                             onLogoutClicked = {
                                 isLoggingOut = true
-                                Firebase.auth.signOut()
+                                FirebaseAuth.getInstance().signOut()
                                 navController.navigate(Routes.AUTH) {
                                     popUpTo(Routes.HOME) { inclusive = true }
                                 }
@@ -176,6 +169,7 @@ private fun ProfileHeader(user: UserModel?) {
 private fun ProfileMenu(
     navController: NavHostController,
     isLoggingOut: Boolean,
+    signedIn: Boolean,
     onLogoutClicked: () -> Unit
 ) {
     Card(
@@ -186,37 +180,67 @@ private fun ProfileMenu(
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {
-            ProfileMenuItem(icon = Icons.AutoMirrored.Filled.ReceiptLong, text = "My Orders", onClick = { navController.navigate(Routes.ORDERS) })
+            ProfileMenuItem(icon = Icons.AutoMirrored.Filled.ReceiptLong, text = "My Orders", onClick = {
+                navController.navigate(Routes.ORDERS) { launchSingleTop = true }
+            })
             HorizontalDivider(color = SecondaryText.copy(alpha = 0.2f))
-            ProfileMenuItem(icon = Icons.Filled.LocationOn, text = "Shipping Addresses", onClick = { navController.navigate(Routes.ADDRESSES) })
+            ProfileMenuItem(icon = Icons.Filled.LocationOn, text = "Shipping Addresses", onClick = {
+                navController.navigate(Routes.ADDRESSES) { launchSingleTop = true }
+            })
             HorizontalDivider(color = SecondaryText.copy(alpha = 0.2f))
-            ProfileMenuItem(icon = Icons.Filled.Tune, text = "Settings", onClick = { navController.navigate(Routes.SETTINGS) })
+            ProfileMenuItem(icon = Icons.Filled.Tune, text = "Settings", onClick = {
+                navController.navigate(Routes.SETTINGS) { launchSingleTop = true }
+            })
         }
     }
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    Button(
-        onClick = onLogoutClicked,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = GreenPrimary,
-            contentColor = Color(0xFF141414)
-        ),
-        shape = RoundedCornerShape(14.dp),
-        enabled = !isLoggingOut
-    ) {
-        if (isLoggingOut) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = Color(0xFF141414),
-                strokeWidth = 2.dp
-            )
-        } else {
+    if (signedIn) {
+        Button(
+            onClick = onLogoutClicked,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GreenPrimary,
+                contentColor = Color(0xFF141414)
+            ),
+            shape = RoundedCornerShape(14.dp),
+            enabled = !isLoggingOut
+        ) {
+            if (isLoggingOut) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color(0xFF141414),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = "Log Out",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    } else {
+        Button(
+            onClick = {
+                navController.navigate(Routes.AUTH) {
+                    popUpTo(Routes.HOME) { inclusive = true }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GreenPrimary,
+                contentColor = Color(0xFF141414)
+            ),
+            shape = RoundedCornerShape(14.dp)
+        ) {
             Text(
-                text = "Log Out",
+                text = "Sign In",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )

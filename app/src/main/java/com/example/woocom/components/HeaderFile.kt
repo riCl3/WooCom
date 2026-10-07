@@ -18,7 +18,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,32 +36,20 @@ import com.example.woocom.Routes
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HeaderView(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    userName: String = ""
 ) {
-    var name by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
-        FirebaseFirestore.getInstance().collection("user")
-            .document(uid)
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    name = task.result?.getString("name").orEmpty()
-                }
-            }
-    }
-
     fun submitSearch() {
-        if (searchQuery.isNotBlank()) {
-            navController.navigate(Routes.search(searchQuery))
+        val query = searchQuery.trim()
+        if (query.isNotEmpty()) {
+            navController.navigate(Routes.search(query)) { launchSingleTop = true }
         }
     }
 
@@ -83,7 +70,7 @@ fun HeaderView(
                 )
             )
             Text(
-                text = name.ifBlank { "shopper" },
+                text = userName.ifBlank { "shopper" },
                 style = TextStyle(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,

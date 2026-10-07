@@ -1,7 +1,6 @@
 package com.example.woocom.pages
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,13 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.RemoveShoppingCart
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -31,84 +29,42 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.woocom.AppUtil
 import com.example.woocom.Routes
 import com.example.woocom.components.CartItemView
+import com.example.woocom.components.ErrorState
+import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
-import com.example.woocom.model.ProductModel
-import com.example.woocom.model.UserModel
 import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.DarkText
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.tasks.await
+import com.example.woocom.viewmodel.CartViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-fun CartPage(navController: NavHostController, onGoHome: () -> Unit = {}) {
-    var userModel by remember { mutableStateOf<UserModel?>(null) }
-    var cartProducts by remember { mutableStateOf<Map<String, ProductModel>>(emptyMap()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var totalPrice by remember { mutableStateOf(0.0) }
-    var refreshTrigger by remember { mutableIntStateOf(0) }
+fun CartPage(
+    navController: NavHostController,
+    onGoHome: () -> Unit = {},
+    viewModel: CartViewModel = viewModel()
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    LaunchedEffect(refreshTrigger) {
-        try {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
-            val userSnapshot = Firebase.firestore.collection("user")
-                .document(uid)
-                .get()
-                .await()
-            val user = userSnapshot.toObject(UserModel::class.java)
-
-            if (user != null) {
-                userModel = user
-
-                val productMap = mutableMapOf<String, ProductModel>()
-                var total = 0.0
-
-                for (productId in user.cartItems.keys) {
-                    val quantity = user.cartItems[productId] ?: 0L
-                    val productSnapshot = Firebase.firestore
-                        .collection("data")
-                        .document("stock")
-                        .collection("products")
-                        .whereEqualTo("id", productId)
-                        .get()
-                        .await()
-
-                    val products = productSnapshot.toObjects(ProductModel::class.java)
-                    if (products.isNotEmpty()) {
-                        val product = products.first()
-                        productMap[productId] = product
-                        total += AppUtil.parsePrice(product.price) * quantity
-                    }
-                }
-
-                totalPrice = total
-                cartProducts = productMap
-            }
-
-            isLoading = false
-        } catch (e: Exception) {
-            isLoading = false
-        }
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { AppUtil.showToast(context, it) }
     }
 
     Scaffold(
@@ -134,31 +90,31 @@ fun CartPage(navController: NavHostController, onGoHome: () -> Unit = {}) {
         containerColor = Color.Transparent
     ) { paddingValues ->
         PremiumBackground {
-            Box(
+            Column(
                 modifier = Modifier
                     .padding(paddingValues)
                     .fillMaxSize()
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
+                    state.isLoading -> LoadingState(modifier = Modifier.align(Alignment.CenterHorizontally))
+
+                    state.error != null -> ErrorState(
+                        message = state.error.orEmpty(),
+                        onRetry = viewModel::refresh,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
 
-                    userModel == null || userModel!!.cartItems.isEmpty() -> {
-                        EmptyCartView(
-                            onBrowseClick = onGoHome,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
+                    state.isEmpty -> EmptyCartView(
+                        onBrowseClick = onGoHome,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    )
 
                     else -> CartContent(
-                        cartItems = userModel!!.cartItems,
-                        cartProducts = cartProducts,
-                        totalPrice = totalPrice,
-                        onCartUpdated = { refreshTrigger++ },
+                        state = state,
+                        onQuantityChanged = viewModel::changeQuantity,
+                        onRemove = viewModel::remove,
                         onCheckout = {
-                            navController.navigate(Routes.checkout(totalPrice + SHIPPING_COST))
+                            navController.navigate(Routes.CHECKOUT) { launchSingleTop = true }
                         }
                     )
                 }
@@ -167,14 +123,13 @@ fun CartPage(navController: NavHostController, onGoHome: () -> Unit = {}) {
     }
 }
 
-private const val SHIPPING_COST = 49.0
+const val SHIPPING_COST = 49.0
 
 @Composable
 private fun CartContent(
-    cartItems: Map<String, Long>,
-    cartProducts: Map<String, ProductModel>,
-    totalPrice: Double,
-    onCartUpdated: () -> Unit,
+    state: com.example.woocom.viewmodel.CartState,
+    onQuantityChanged: (String, Long) -> Unit,
+    onRemove: (String) -> Unit,
     onCheckout: () -> Unit
 ) {
     Column(
@@ -187,19 +142,20 @@ private fun CartContent(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(cartItems.keys.toList(), key = { it }) { productId ->
+            items(state.lines, key = { it.productId }) { line ->
                 CartItemView(
-                    productId = productId,
-                    quantity = cartItems[productId] ?: 0L,
-                    product = cartProducts[productId],
-                    onCartUpdated = onCartUpdated
+                    productId = line.productId,
+                    quantity = line.quantity,
+                    product = line.product,
+                    onQuantityChanged = { onQuantityChanged(line.productId, it) },
+                    onRemove = { onRemove(line.productId) }
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        OrderSummaryCard(totalPrice = totalPrice, onCheckout = onCheckout)
+        OrderSummaryCard(totalPrice = state.subtotal, onCheckout = onCheckout)
     }
 }
 
@@ -287,12 +243,12 @@ private fun SummaryRow(label: String, value: String, emphasize: Boolean = false)
 @Composable
 private fun EmptyCartView(onBrowseClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier,
+        modifier = modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Default.ShoppingCart,
+            imageVector = Icons.Default.RemoveShoppingCart,
             contentDescription = null,
             modifier = Modifier.size(100.dp),
             tint = SecondaryText

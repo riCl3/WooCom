@@ -34,8 +34,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,40 +53,43 @@ import androidx.compose.ui.zIndex
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.woocom.AppUtil
+import com.example.woocom.components.ErrorState
 import com.example.woocom.components.GlassCard
 import com.example.woocom.components.NeonGlassCard
 import com.example.woocom.components.PremiumBackground
+import com.example.woocom.components.rememberAddToCart
+import com.example.woocom.data.Resource
+import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.resourceOf
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.FavoriteRed
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 import com.tbuonomo.viewpagerdotsindicator.compose.DotsIndicator
 import com.tbuonomo.viewpagerdotsindicator.compose.model.DotGraphic
 import com.tbuonomo.viewpagerdotsindicator.compose.type.ShiftIndicatorType
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailsPage(navController: NavHostController, productId: String) {
     var product by remember { mutableStateOf<ProductModel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(productId) {
-        Firebase.firestore
-            .collection("data")
-            .document("stock")
-            .collection("products")
-            .whereEqualTo("id", productId)
-            .get().addOnCompleteListener { task ->
-                isLoading = false
-                if (task.isSuccessful) {
-                    val result = task.result.toObjects(ProductModel::class.java)
-                    if (result.isNotEmpty()) product = result.first()
-                }
-            }
+    LaunchedEffect(productId, attempt) {
+        isLoading = true
+        loadError = null
+        val outcome = resourceOf { ServiceLocator.productRepository.productById(productId) }
+        isLoading = false
+        when (outcome) {
+            is Resource.Success -> product = outcome.data
+            is Resource.Error -> loadError = outcome.message
+            Resource.Loading -> Unit
+        }
     }
 
     PremiumBackground {
@@ -120,10 +125,10 @@ fun ProductDetailsPage(navController: NavHostController, productId: String) {
                         color = GreenPrimary
                     )
 
-                    product == null -> Text(
-                        text = "Product not found",
-                        modifier = Modifier.align(Alignment.Center),
-                        color = SecondaryText
+                    product == null -> ErrorState(
+                        message = loadError ?: "Product not found",
+                        onRetry = { attempt++ },
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
                     else -> ProductContent(product = product!!)
@@ -136,7 +141,7 @@ fun ProductDetailsPage(navController: NavHostController, productId: String) {
 @Composable
 private fun ProductContent(product: ProductModel) {
     val scrollState = rememberScrollState()
-    val context = LocalContext.current
+    val addToCart = rememberAddToCart()
 
     Column(
         modifier = Modifier
@@ -196,7 +201,7 @@ private fun ProductContent(product: ProductModel) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { AppUtil.addToCart(productId = product.id, context = context) },
+            onClick = { addToCart(product.id) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -247,10 +252,13 @@ private fun InfoCard(title: String, content: List<String>) {
 private fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
     val pagerState = rememberPagerState(pageCount = { images.size })
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var isFavorite by remember { mutableStateOf(false) }
 
     LaunchedEffect(productId) {
-        AppUtil.isFavorite(productId) { isFavorite = it }
+        isFavorite = resourceOf {
+            ServiceLocator.userRepository.isFavorite(productId)
+        }.dataOrNull == true
     }
 
     LaunchedEffect(Unit) {
@@ -300,12 +308,17 @@ private fun ImageCarouselWithFavorite(images: List<String>, productId: String) {
 
         IconButton(
             onClick = {
-                if (isFavorite) {
-                    AppUtil.removeFromFavorites(productId, context)
-                } else {
-                    AppUtil.addToFavorites(productId, context)
+                val target = !isFavorite
+                isFavorite = target
+                scope.launch {
+                    val outcome = resourceOf {
+                        ServiceLocator.userRepository.setFavorite(productId, target)
+                    }
+                    if (outcome is Resource.Error) {
+                        isFavorite = !target
+                        AppUtil.showToast(context, "Could not update favourites")
+                    }
                 }
-                isFavorite = !isFavorite
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)

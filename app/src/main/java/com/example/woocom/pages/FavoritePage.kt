@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,74 +32,73 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.woocom.AppUtil
+import com.example.woocom.components.EmptyState
+import com.example.woocom.components.ErrorState
+import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
+import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.resourceOf
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritePage() {
-    val auth = FirebaseAuth.getInstance()
-    val db = Firebase.firestore
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var isLoading by remember { mutableStateOf(true) }
-    var userDocId by remember { mutableStateOf<String?>(null) }
+    var loadError by remember { mutableStateOf<String?>(null) }
     var favoriteProducts by remember { mutableStateOf<List<ProductModel>>(emptyList()) }
+    var attempt by remember { mutableStateOf(0) }
 
-    LaunchedEffect(Unit) {
-        try {
-            val uid = auth.currentUser?.uid ?: return@LaunchedEffect
-
-            val userQuery = db.collection("user")
-                .whereEqualTo("userId", uid)
-                .get()
-                .await()
-
-            if (!userQuery.isEmpty) {
-                val userDoc = userQuery.documents.first()
-                userDocId = userDoc.id
-
-                val favoritesMap = userDoc.get("favorites") as? Map<*, *> ?: emptyMap<String, Boolean>()
-                val favoriteIds = favoritesMap.keys.filterIsInstance<String>()
-
-                if (favoriteIds.isNotEmpty()) {
-                    val collected = mutableListOf<ProductModel>()
-                    // Firestore whereIn supports max 10 values per query
-                    favoriteIds.chunked(10).forEach { chunk ->
-                        val snapshot = db.collection("data")
-                            .document("stock")
-                            .collection("products")
-                            .whereIn("id", chunk)
-                            .get()
-                            .await()
-                        collected += snapshot.toObjects(ProductModel::class.java)
-                    }
-                    favoriteProducts = collected
-                }
+    LaunchedEffect(attempt) {
+        isLoading = true
+        loadError = null
+        val result = resourceOf {
+            val user = ServiceLocator.userRepository.currentUser()
+                ?: throw IllegalStateException("Please sign in to see your favourites.")
+            val favoriteIds = user.favorites.filterValues { it }.keys.toList()
+            if (favoriteIds.isEmpty()) {
+                emptyList()
+            } else {
+                ServiceLocator.productRepository.productsByIds(favoriteIds)
             }
-        } catch (e: Exception) {
-            favoriteProducts = emptyList()
-        } finally {
-            isLoading = false
+        }
+        favoriteProducts = result.dataOrNull.orEmpty()
+        loadError = result.errorMessageOrNull
+        isLoading = false
+    }
+
+    fun remove(product: ProductModel) {
+        val remaining = favoriteProducts.filterNot { it.id == product.id }
+        favoriteProducts = remaining
+        scope.launch {
+            val result = resourceOf {
+                ServiceLocator.userRepository.setFavorite(product.id, favorite = false)
+            }
+            if (result.errorMessageOrNull != null) {
+                favoriteProducts = favoriteProducts + product
+                AppUtil.showToast(context, "Could not remove ${product.title}")
+            }
         }
     }
 
@@ -120,12 +118,18 @@ fun FavoritePage() {
                     .fillMaxSize()
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
+                    isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
+
+                    loadError != null -> ErrorState(
+                        message = loadError!!,
+                        onRetry = { attempt++ },
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
-                    favoriteProducts.isEmpty() -> EmptyFavoritesView(
+                    favoriteProducts.isEmpty() -> EmptyState(
+                        icon = Icons.Default.FavoriteBorder,
+                        title = "No favourites yet",
+                        subtitle = "Tap the heart on a product to add it here",
                         modifier = Modifier.align(Alignment.Center)
                     )
 
@@ -138,47 +142,13 @@ fun FavoritePage() {
                         items(favoriteProducts, key = { it.id }) { product ->
                             FavoriteItemCard(
                                 product = product,
-                                onRemove = {
-                                    val id = userDocId ?: return@FavoriteItemCard
-                                    Firebase.firestore.collection("user")
-                                        .document(id)
-                                        .update("favorites.${product.id}", FieldValue.delete())
-                                    favoriteProducts = favoriteProducts.filter { it.id != product.id }
-                                }
+                                onRemove = { remove(product) }
                             )
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun EmptyFavoritesView(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Default.FavoriteBorder,
-            contentDescription = null,
-            tint = SecondaryText,
-            modifier = Modifier.size(72.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "No favourites yet",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = PrimaryText
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Tap the heart on a product to add it here",
-            fontSize = 14.sp,
-            color = SecondaryText
-        )
     }
 }
 

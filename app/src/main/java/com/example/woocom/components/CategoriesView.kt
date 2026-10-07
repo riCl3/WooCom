@@ -12,11 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,32 +26,17 @@ import coil.compose.AsyncImage
 import com.example.woocom.Routes
 import com.example.woocom.model.CategoryModel
 import com.example.woocom.ui.theme.PrimaryText
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
-import com.google.firebase.firestore.toObject
 
 @Composable
 fun CategoriesView(
     modifier: Modifier = Modifier,
-    navController: NavHostController
+    navController: NavHostController,
+    categories: List<CategoryModel>
 ) {
-    var categoryList by remember { mutableStateOf(listOf<CategoryModel>()) }
-
-    LaunchedEffect(Unit) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("categoties")
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    categoryList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(CategoryModel::class.java)
-                    }
-                }
-            }
-    }
+    if (categories.isEmpty()) return
 
     LazyRow(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(categoryList) { item ->
+        items(categories, key = { it.id }) { item ->
             CategoryItem(category = item, navController = navController)
         }
     }
@@ -68,7 +48,11 @@ fun CategoryItem(category: CategoryModel, navController: NavHostController) {
         modifier = Modifier
             .size(110.dp)
             .padding(4.dp)
-            .clickable { navController.navigate(Routes.categoryProducts(category.id)) },
+            .clickable {
+                navController.navigate(Routes.categoryProducts(category.id)) {
+                    launchSingleTop = true
+                }
+            },
         shape = RoundedCornerShape(16.dp)
     ) {
         Column(

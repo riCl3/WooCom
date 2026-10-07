@@ -1,7 +1,10 @@
 package com.example.woocom.pages
 
 import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,50 +48,57 @@ import androidx.navigation.NavHostController
 import com.example.woocom.AppUtil
 import com.example.woocom.BuildConfig
 import com.example.woocom.components.CartItemView
+import com.example.woocom.components.ErrorState
+import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
-import com.example.woocom.model.UserModel
+import com.example.woocom.data.PaymentSession
+import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.resourceOf
+import com.example.woocom.model.OrderModel
 import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.DarkText
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.woocom.viewmodel.CartLine
 import com.razorpay.Checkout
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CheckoutPage(navController: NavHostController, totalAmount: Double) {
-    val auth = FirebaseAuth.getInstance()
-    val userId = auth.currentUser?.uid
+fun CheckoutPage(navController: NavHostController) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    var user by remember { mutableStateOf<UserModel?>(null) }
-    var userDocId by remember { mutableStateOf<String?>(null) }
+    var lines by remember { mutableStateOf<List<CartLine>>(emptyList()) }
+    var userName by remember { mutableStateOf("") }
+    var userId by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableStateOf(0) }
 
-    LaunchedEffect(userId) {
-        if (userId != null) {
-            try {
-                val snapshot = FirebaseFirestore.getInstance().collection("user")
-                    .whereEqualTo("userId", userId)
-                    .get()
-                    .await()
-                if (!snapshot.isEmpty) {
-                    user = snapshot.documents.first().toObject(UserModel::class.java)
-                    userDocId = snapshot.documents.first().id
-                }
-            } catch (e: Exception) {
-                // Fall through to the error state
-            } finally {
-                isLoading = false
+    LaunchedEffect(attempt) {
+        isLoading = true
+        loadError = null
+        val result = resourceOf {
+            val uid = ServiceLocator.userRepository.currentUserId()
+                ?: throw IllegalStateException("Please sign in to continue.")
+            val user = ServiceLocator.userRepository.currentUser()
+                ?: throw IllegalStateException("Your account could not be loaded.")
+            val products = ServiceLocator.productRepository
+                .productsByIds(user.cartItems.keys)
+                .associateBy { it.id }
+            userId = uid
+            userName = user.name
+            user.cartItems.map { (productId, quantity) ->
+                CartLine(productId, quantity, products[productId])
             }
-        } else {
-            isLoading = false
         }
+        lines = result.dataOrNull ?: emptyList()
+        loadError = result.errorMessageOrNull
+        isLoading = false
     }
 
     PremiumBackground {
@@ -120,29 +130,32 @@ fun CheckoutPage(navController: NavHostController, totalAmount: Double) {
                     .fillMaxSize()
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
+                    isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
+
+                    loadError != null -> ErrorState(
+                        message = loadError!!,
+                        onRetry = { attempt++ },
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
-                    user == null || userDocId == null -> Text(
-                        text = "Unable to load your details",
-                        modifier = Modifier.align(Alignment.Center),
-                        color = SecondaryText
-                    )
-
-                    user!!.cartItems.isEmpty() -> Text(
+                    lines.isEmpty() -> Text(
                         text = "Your cart is empty",
                         modifier = Modifier.align(Alignment.Center),
                         color = SecondaryText
                     )
 
                     else -> CheckoutContent(
-                        userName = user!!.name,
-                        cartItems = user!!.cartItems,
-                        totalAmount = totalAmount,
+                        userName = userName,
+                        lines = lines,
                         onPay = {
-                            startPayment(context as Activity, totalAmount.toFloat())
+                            val activity = context.findActivity()
+                            if (activity == null) {
+                                AppUtil.showToast(context, "Payment is unavailable right now")
+                                return@CheckoutContent
+                            }
+                            scope.launch {
+                                beginPayment(context, userId, lines, activity)
+                            }
                         }
                     )
                 }
@@ -151,13 +164,54 @@ fun CheckoutPage(navController: NavHostController, totalAmount: Double) {
     }
 }
 
+/**
+ * Creates the order in its `pending` state first, then opens Razorpay.
+ *
+ * The order document is the single source of truth for whether the payment succeeded;
+ * [com.example.woocom.MainActivity] flips it to `paid`/`failed` from the Razorpay
+ * callback, so a crash between "opened checkout" and "callback received" leaves a
+ * recoverable `pending` row instead of a paid-looking order with no payment.
+ */
+private suspend fun beginPayment(
+    context: Context,
+    userId: String,
+    lines: List<CartLine>,
+    activity: Activity
+) {
+    val subtotal = lines.sumOf { AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity) }
+    val totalAmount = subtotal + SHIPPING_COST
+
+    val orderId = resourceOf {
+        ServiceLocator.userRepository.placeOrder(
+            OrderModel(
+                userId = userId,
+                amount = totalAmount,
+                itemCount = lines.sumOf { it.quantity }.toInt(),
+                items = lines.associate { it.productId to it.quantity },
+                status = OrderModel.STATUS_PENDING,
+                createdAt = System.currentTimeMillis()
+            )
+        )
+    }.dataOrNull
+
+    if (orderId == null) {
+        AppUtil.showToast(context, "Could not start payment, please try again.")
+        return
+    }
+
+    PaymentSession.pendingOrderId = orderId
+    startPayment(activity, totalAmount)
+}
+
 @Composable
 private fun CheckoutContent(
     userName: String,
-    cartItems: Map<String, Long>,
-    totalAmount: Double,
+    lines: List<CartLine>,
     onPay: () -> Unit
 ) {
+    val subtotal = lines.sumOf { AppUtil.lineTotal(it.product?.price.orEmpty(), it.quantity) }
+    val totalAmount = subtotal + SHIPPING_COST
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -176,10 +230,11 @@ private fun CheckoutContent(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            items(cartItems.keys.toList()) { productId ->
+            items(lines, key = { it.productId }) { line ->
                 CartItemView(
-                    productId = productId,
-                    quantity = cartItems[productId] ?: 0L
+                    productId = line.productId,
+                    quantity = line.quantity,
+                    product = line.product
                 )
             }
         }
@@ -189,7 +244,7 @@ private fun CheckoutContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = CardSurface),
-            border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
+            border = BorderStroke(0.5.dp, NeonBorder),
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
@@ -199,17 +254,31 @@ private fun CheckoutContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Amount Payable",
-                    fontSize = 16.sp,
-                    color = PrimaryText
-                )
-                Text(
-                    text = AppUtil.formatPrice(totalAmount),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = GreenPrimary
-                )
+                Column {
+                    Text(text = "Subtotal", fontSize = 14.sp, color = SecondaryText)
+                    Text(text = "Delivery", fontSize = 14.sp, color = SecondaryText)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Amount Payable",
+                        fontSize = 16.sp,
+                        color = PrimaryText
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = AppUtil.formatPrice(subtotal), fontSize = 14.sp, color = SecondaryText)
+                    Text(
+                        text = AppUtil.formatPrice(SHIPPING_COST),
+                        fontSize = 14.sp,
+                        color = SecondaryText
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = AppUtil.formatPrice(totalAmount),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary
+                    )
+                }
             }
         }
 
@@ -227,7 +296,7 @@ private fun CheckoutContent(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text(
-                text = "Place Order",
+                text = "Pay ${AppUtil.formatPrice(totalAmount)}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -236,7 +305,7 @@ private fun CheckoutContent(
 }
 
 /** Launches the Razorpay checkout flow. */
-private fun startPayment(activity: Activity, amount: Float) {
+private fun startPayment(activity: Activity, amount: Double) {
     val checkout = Checkout()
     checkout.setKeyID(BuildConfig.RAZORPAY_KEY_ID)
 
@@ -253,4 +322,10 @@ private fun startPayment(activity: Activity, amount: Float) {
     } catch (e: Exception) {
         Toast.makeText(activity, "Unable to open payment", Toast.LENGTH_SHORT).show()
     }
+}
+
+internal fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

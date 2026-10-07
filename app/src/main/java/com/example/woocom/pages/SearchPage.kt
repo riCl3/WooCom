@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -46,49 +45,41 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.woocom.Routes
+import com.example.woocom.components.EmptyState
+import com.example.woocom.components.ErrorState
+import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
+import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.resourceOf
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchPage(navController: NavController, query: String) {
     var searchResults by remember { mutableStateOf<List<ProductModel>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableStateOf(0) }
 
-    LaunchedEffect(query) {
+    LaunchedEffect(query, attempt) {
+        isLoading = true
+        loadError = null
+        searchResults = emptyList()
+
         if (query.isBlank()) {
             isLoading = false
-            searchResults = emptyList()
             return@LaunchedEffect
         }
 
-        isLoading = true
-        try {
-            // Fetch the whole catalogue and filter client-side for a case-insensitive
-            // match on title or category (dataset is small in this demo).
-            val snapshot = Firebase.firestore.collection("data")
-                .document("stock")
-                .collection("products")
-                .get()
-                .await()
-
-            searchResults = snapshot.toObjects(ProductModel::class.java).filter {
-                it.title.contains(query, ignoreCase = true) ||
-                    it.category.contains(query, ignoreCase = true)
-            }
-        } catch (e: Exception) {
-            searchResults = emptyList()
-        } finally {
-            isLoading = false
-        }
+        val result = resourceOf { ServiceLocator.productRepository.searchProducts(query) }
+        searchResults = result.dataOrNull.orEmpty()
+        loadError = result.errorMessageOrNull
+        isLoading = false
     }
 
     Scaffold(
@@ -120,33 +111,20 @@ fun SearchPage(navController: NavController, query: String) {
                     .fillMaxSize()
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
+                    isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
+
+                    loadError != null -> ErrorState(
+                        message = loadError!!,
+                        onRetry = { attempt++ },
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
-                    searchResults.isEmpty() -> Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = SecondaryText,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "No items found for \"$query\"",
-                            fontSize = 16.sp,
-                            color = PrimaryText
-                        )
-                        Text(
-                            text = "Try a different keyword or category",
-                            fontSize = 13.sp,
-                            color = SecondaryText
-                        )
-                    }
+                    searchResults.isEmpty() -> EmptyState(
+                        icon = Icons.Default.Search,
+                        title = "No items found for \"$query\"",
+                        subtitle = "Try a different keyword or category",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
 
                     else -> LazyColumn(
                         modifier = Modifier
@@ -158,7 +136,9 @@ fun SearchPage(navController: NavController, query: String) {
                             SearchProductItem(
                                 product = product,
                                 onClick = {
-                                    navController.navigate(Routes.productDetails(product.id))
+                                    navController.navigate(Routes.productDetails(product.id)) {
+                                        launchSingleTop = true
+                                    }
                                 }
                             )
                         }

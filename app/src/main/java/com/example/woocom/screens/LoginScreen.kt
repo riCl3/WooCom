@@ -29,9 +29,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.woocom.AppUtil
@@ -56,6 +59,7 @@ import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.PrimaryText
 import com.example.woocom.ui.theme.SecondaryText
+import com.example.woocom.viewmodel.AuthUiState
 import com.example.woocom.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,17 +68,34 @@ fun LoginScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel = viewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf(false) }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var emailError by rememberSaveable { mutableStateOf(false) }
+    var passwordError by rememberSaveable { mutableStateOf(false) }
+    val authState by authViewModel.state.collectAsStateWithLifecycle()
+    val isLoading = authState is AuthUiState.Submitting
     val context = LocalContext.current
 
     fun validate(): Boolean {
         emailError = email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
         passwordError = password.length < 6
         return !emailError && !passwordError
+    }
+
+    LaunchedEffect(authState) {
+        when (val current = authState) {
+            AuthUiState.Success -> {
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.AUTH) { inclusive = true }
+                }
+                authViewModel.consumeSuccess()
+            }
+            is AuthUiState.Failure -> {
+                AppUtil.showToast(context, current.message)
+                authViewModel.clearError()
+            }
+            else -> Unit
+        }
     }
 
     PremiumBackground {
@@ -182,21 +203,7 @@ fun LoginScreen(
 
                     Button(
                         onClick = {
-                            if (!validate()) return@Button
-                            isLoading = true
-                            authViewModel.login(email.trim(), password) { success, errorMessage ->
-                                isLoading = false
-                                if (success) {
-                                    navController.navigate(Routes.HOME) {
-                                        popUpTo(Routes.AUTH) { inclusive = true }
-                                    }
-                                } else {
-                                    AppUtil.showToast(
-                                        context,
-                                        errorMessage ?: "Something went wrong"
-                                    )
-                                }
-                            }
+                            if (validate()) authViewModel.login(email.trim(), password)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -231,7 +238,9 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text("Don't have an account? ", color = SecondaryText)
-                        TextButton(onClick = { navController.navigate(Routes.SIGNUP) }) {
+                        TextButton(onClick = {
+                            navController.navigate(Routes.SIGNUP) { launchSingleTop = true }
+                        }) {
                             Text("Sign Up", fontWeight = FontWeight.Bold, color = GreenPrimary)
                         }
                     }

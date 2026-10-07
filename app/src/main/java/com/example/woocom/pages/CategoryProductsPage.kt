@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,33 +30,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.woocom.components.EmptyState
+import com.example.woocom.components.ErrorState
+import com.example.woocom.components.LoadingState
 import com.example.woocom.components.PremiumBackground
 import com.example.woocom.components.ProductItemView
+import com.example.woocom.data.ServiceLocator
+import com.example.woocom.data.resourceOf
 import com.example.woocom.model.ProductModel
-import com.example.woocom.ui.theme.GreenPrimary
 import com.example.woocom.ui.theme.PrimaryText
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryProductsPage(navController: NavHostController, categoryId: String) {
     var productList by remember { mutableStateOf(listOf<ProductModel>()) }
     var isLoading by remember { mutableStateOf(true) }
+    var loadError by remember { mutableStateOf<String?>(null) }
+    var attempt by remember { mutableStateOf(0) }
 
-    LaunchedEffect(categoryId) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("products")
-            .whereEqualTo("category", categoryId)
-            .get().addOnCompleteListener { task ->
-                isLoading = false
-                if (task.isSuccessful) {
-                    productList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(ProductModel::class.java)
-                    }
-                }
-            }
+    LaunchedEffect(categoryId, attempt) {
+        isLoading = true
+        loadError = null
+        val result = resourceOf {
+            ServiceLocator.productRepository.productsInCategory(categoryId)
+        }
+        productList = result.dataOrNull.orEmpty()
+        loadError = result.errorMessageOrNull
+        isLoading = false
     }
 
     PremiumBackground {
@@ -89,14 +88,17 @@ fun CategoryProductsPage(navController: NavHostController, categoryId: String) {
                     .fillMaxSize()
             ) {
                 when {
-                    isLoading -> CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = GreenPrimary
+                    isLoading -> LoadingState(modifier = Modifier.align(Alignment.Center))
+
+                    loadError != null -> ErrorState(
+                        message = loadError!!,
+                        onRetry = { attempt++ },
+                        modifier = Modifier.align(Alignment.Center)
                     )
 
-                    productList.isEmpty() -> Text(
-                        text = "No products in this category yet",
-                        color = PrimaryText,
+                    productList.isEmpty() -> EmptyState(
+                        title = "No products in this category yet",
+                        subtitle = "Check back soon for new arrivals",
                         modifier = Modifier.align(Alignment.Center)
                     )
 
@@ -106,7 +108,10 @@ fun CategoryProductsPage(navController: NavHostController, categoryId: String) {
                             .padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(productList.chunked(2)) { rowItems ->
+                        items(
+                            items = productList.chunked(2),
+                            key = { chunk -> chunk.first().id }
+                        ) { rowItems ->
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 modifier = Modifier.fillMaxWidth()

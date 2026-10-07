@@ -28,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.woocom.AppUtil
 import com.example.woocom.Routes
 import com.example.woocom.model.ProductModel
 import com.example.woocom.ui.theme.DarkSurface
@@ -52,12 +50,16 @@ fun ProductItemView(
     navController: NavHostController
 ) {
     val discount = calculateDiscount(product.actualPrice, product.price)
-    val context = LocalContext.current
+    val addToCart = rememberAddToCart()
 
     Card(
         modifier = modifier
             .padding(8.dp)
-            .clickable { navController.navigate(Routes.productDetails(product.id)) },
+            .clickable {
+                navController.navigate(Routes.productDetails(product.id)) {
+                    launchSingleTop = true
+                }
+            },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -150,7 +152,7 @@ fun ProductItemView(
                         contentDescription = "Add to Cart",
                         modifier = Modifier
                             .size(20.dp)
-                            .clickable { AppUtil.addToCart(productId = product.id, context = context) },
+                            .clickable { addToCart(product.id) },
                         tint = GreenPrimary
                     )
                 }
