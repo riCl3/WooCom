@@ -2,7 +2,6 @@ package com.example.woocom.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,109 +10,134 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.woocom.R
-
+import com.example.woocom.Routes
+import com.example.woocom.components.PremiumBackground
+import com.example.woocom.ui.theme.CardSurface
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 
 @Composable
-fun AuthScreen(modifier: Modifier = Modifier, navController: NavHostController) {
-    com.example.woocom.components.PremiumBackground {
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+fun AuthScreen(navController: NavHostController) {
+    PremiumBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center) {
-      Image(painter = painterResource(id = R.drawable.loginbg),
-          contentDescription = "Login",
-          modifier = Modifier.fillMaxWidth()
-              .height(300.dp))
-
-        Text("Start Your Shopping Journey With WooCom",
-            style = TextStyle(
-                fontSize = 20.sp,
-                fontFamily = FontFamily.Cursive,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                color = Color.White // Text White
-            ))
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                navController.navigate("login")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, com.example.woocom.ui.theme.NeonBorder)
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFFB7FF00), // Green color
-                            Color(0xFFB7FF00)  // Lighter green color
-                        )
-                    )
-                ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent // Makes the button's container transparent so the gradient shows through
-            )
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Login",
-                style = TextStyle(fontSize = 20.sp, color = Color.Black)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp), // Padding for the row
-            verticalAlignment = Alignment.CenterVertically // Align items in the center vertically
-        ) {
-            // Text before the button
-            Text(
-                text = "Don't Have An Account? ",
-                style = TextStyle(fontSize = 16.sp, color = Color.White) // Text White
+            Image(
+                painter = painterResource(id = R.drawable.loginbg),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(24.dp))
             )
 
-            // TextButton with a darker neon green
-            TextButton(
-                onClick = {
-                    navController.navigate("signup")
-                },
-                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
-                    contentColor = Color(0xFF89F8C7) // Slightly darker neon green color
+            Spacer(modifier = Modifier.height(28.dp))
+
+            Text(
+                text = "Start Your Shopping Journey",
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    color = PrimaryText
                 )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Discover amazing deals and premium products curated just for you.",
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    color = SecondaryText
+                )
+            )
+
+            Spacer(modifier = Modifier.height(36.dp))
+
+            Button(
+                onClick = { navController.navigate(Routes.LOGIN) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary,
+                    contentColor = com.example.woocom.ui.theme.DarkText
+                ),
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text(
-                    text = "Sign Up",
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1ED927), // Slightly darker neon green
-                    )
+                    text = "Log In",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
                 )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { navController.navigate(Routes.SIGNUP) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CardSurface,
+                    contentColor = PrimaryText
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(
+                    text = "Create Account",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Already have an account? ",
+                    fontSize = 14.sp,
+                    color = SecondaryText
+                )
+                TextButton(onClick = { navController.navigate(Routes.LOGIN) }) {
+                    Text(
+                        text = "Sign in",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary
+                    )
+                }
             }
         }
     }
-    }
-
-
 }
-
-

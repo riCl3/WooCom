@@ -1,127 +1,256 @@
 package com.example.woocom.pages
 
 import android.app.Activity
-import android.util.Log
-import androidx.compose.foundation.layout.*
+import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.woocom.GlobalNavigation
+import androidx.navigation.NavHostController
+import com.example.woocom.AppUtil
+import com.example.woocom.BuildConfig
 import com.example.woocom.components.CartItemView
+import com.example.woocom.components.PremiumBackground
 import com.example.woocom.model.UserModel
-import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.CardSurface
 import com.example.woocom.ui.theme.DarkText
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.NeonBorder
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.razorpay.Checkout
 import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CheckoutPage(totalAmount: Any) {
+fun CheckoutPage(navController: NavHostController, totalAmount: Double) {
     val auth = FirebaseAuth.getInstance()
     val userId = auth.currentUser?.uid
-    val db = FirebaseFirestore.getInstance()
+    val context = LocalContext.current
 
     var user by remember { mutableStateOf<UserModel?>(null) }
     var userDocId by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Load user + cart
     LaunchedEffect(userId) {
         if (userId != null) {
             try {
-                val snapshot = db.collection("user")
+                val snapshot = FirebaseFirestore.getInstance().collection("user")
                     .whereEqualTo("userId", userId)
                     .get()
                     .await()
                 if (!snapshot.isEmpty) {
-                    val doc = snapshot.documents.first()
-                    user = doc.toObject(UserModel::class.java)
-                    userDocId = doc.id
+                    user = snapshot.documents.first().toObject(UserModel::class.java)
+                    userDocId = snapshot.documents.first().id
                 }
             } catch (e: Exception) {
-                // Handle permission error or other exceptions
-                Log.e("CheckoutPage", "Error loading user data", e)
+                // Fall through to the error state
             } finally {
                 isLoading = false
             }
         } else {
-             isLoading = false
+            isLoading = false
         }
     }
 
-    if (isLoading) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else if (user == null || userDocId == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("User not found")
-        }
-    } else {
-        Column(Modifier.fillMaxSize().padding(16.dp)) {
-            Text("Hello, ${user!!.name}", style = MaterialTheme.typography.titleLarge)
-
-            Spacer(Modifier.height(16.dp))
-
-            // Cart Items
-            val cartItems = user!!.cartItems
-            if (cartItems.isEmpty()) {
-                Text("Your cart is empty")
-            } else {
-                cartItems.forEach { (productId, quantity) ->
-                    CartItemView(productId = productId, quantity = quantity)
-                }
-
-                Spacer(Modifier.height(24.dp))
-
-                // Place Order Button
-                Button(
-                    onClick = {
-                        startPayment(totalAmount as Float)
-                        // IMPORTANT: Cart clearing is now handled in MainActivity.onPaymentSuccess
+    PremiumBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = { Text("Checkout", color = PrimaryText) },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = PrimaryText
+                            )
+                        }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = GreenPrimary,
-                        contentColor = DarkText
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = "Place Order",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = PrimaryText,
+                        navigationIconContentColor = PrimaryText
+                    )
+                )
+            }
+        ) { padding ->
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                when {
+                    isLoading -> CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = GreenPrimary
+                    )
+
+                    user == null || userDocId == null -> Text(
+                        text = "Unable to load your details",
+                        modifier = Modifier.align(Alignment.Center),
+                        color = SecondaryText
+                    )
+
+                    user!!.cartItems.isEmpty() -> Text(
+                        text = "Your cart is empty",
+                        modifier = Modifier.align(Alignment.Center),
+                        color = SecondaryText
+                    )
+
+                    else -> CheckoutContent(
+                        userName = user!!.name,
+                        cartItems = user!!.cartItems,
+                        totalAmount = totalAmount,
+                        onPay = {
+                            startPayment(context as Activity, totalAmount.toFloat())
+                        }
                     )
                 }
             }
         }
     }
 }
-fun razorPayApiKey() : String{
-    return "rzp_test_R6KVQIP9lwJh8q"
+
+@Composable
+private fun CheckoutContent(
+    userName: String,
+    cartItems: Map<String, Long>,
+    totalAmount: Double,
+    onPay: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Hello, $userName",
+            style = androidx.compose.material3.MaterialTheme.typography.titleLarge,
+            color = PrimaryText
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+        ) {
+            items(cartItems.keys.toList()) { productId ->
+                CartItemView(
+                    productId = productId,
+                    quantity = cartItems[productId] ?: 0L
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = CardSurface),
+            border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Amount Payable",
+                    fontSize = 16.sp,
+                    color = PrimaryText
+                )
+                Text(
+                    text = AppUtil.formatPrice(totalAmount),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = GreenPrimary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onPay,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = GreenPrimary,
+                contentColor = DarkText
+            ),
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            Text(
+                text = "Place Order",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }
 
-fun startPayment(amount :  Float){
+/** Launches the Razorpay checkout flow. */
+private fun startPayment(activity: Activity, amount: Float) {
     val checkout = Checkout()
-    checkout.setKeyID(razorPayApiKey())
+    checkout.setKeyID(BuildConfig.RAZORPAY_KEY_ID)
 
-    val options = JSONObject()
-    options.put("name", "WooCom")
-    options.put("description", "Payment")
-    options.put("amount", amount*100)
-    options.put("currency", "INR")
+    val options = JSONObject().apply {
+        put("name", "WooCom")
+        put("description", "Shopping payment")
+        put("amount", (amount * 100).toInt())
+        put("currency", "INR")
+        put("theme", JSONObject().put("color", "#A5E800"))
+    }
 
-    // Using GlobalNavigation to get context, assuming it is an Activity context or we cast it
-    // ideally should be passed from MainActivity or handled via callback
-    checkout.open(GlobalNavigation.navController.context as Activity, options)
-
+    try {
+        checkout.open(activity, options)
+    } catch (e: Exception) {
+        Toast.makeText(activity, "Unable to open payment", Toast.LENGTH_SHORT).show()
+    }
 }

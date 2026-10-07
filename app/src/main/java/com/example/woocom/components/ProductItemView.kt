@@ -15,19 +15,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -36,36 +34,46 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.woocom.AppUtil
-import com.example.woocom.GlobalNavigation
+import com.example.woocom.Routes
 import com.example.woocom.model.ProductModel
+import com.example.woocom.ui.theme.DarkSurface
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.PriceRed
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 
 @Composable
-fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
+fun ProductItemView(
+    product: ProductModel,
+    modifier: Modifier = Modifier,
+    navController: NavHostController
+) {
     val discount = calculateDiscount(product.actualPrice, product.price)
     val context = LocalContext.current
 
-    androidx.compose.material3.Card(
+    Card(
         modifier = modifier
             .padding(8.dp)
-            .clickable {
-                GlobalNavigation.navController.navigate("product-details/${product.id}")
-            },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            .clickable { navController.navigate(Routes.productDetails(product.id)) },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, GreenPrimary.copy(alpha = 0.3f))
     ) {
         Column(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth()
         ) {
-            // Product image with discount badge overlay
             Box(
                 modifier = Modifier
-                    .height(170.dp)
+                    .height(150.dp)
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(GreenPrimary.copy(alpha = 0.06f))
             ) {
                 AsyncImage(
                     model = product.images.firstOrNull(),
@@ -78,14 +86,14 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
                     Surface(
                         modifier = Modifier
                             .padding(8.dp)
-                            .align(Alignment.TopEnd),
-                        color = Color.Red,
+                            .align(Alignment.TopStart),
+                        color = PriceRed,
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = "-$discount%",
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelMedium,
+                            fontSize = 12.sp,
                             color = Color.White,
                             fontWeight = FontWeight.Bold
                         )
@@ -93,43 +101,40 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
                 }
             }
 
-            // Product title
             Text(
                 text = product.title,
                 fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                color = PrimaryText,
                 modifier = Modifier
                     .padding(top = 8.dp)
-                    .fillMaxWidth(),
-                style = MaterialTheme.typography.bodyLarge
+                    .fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(4.dp)) // ✅ Reduced spacing here
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Price and cart row
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 0.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "₹${product.price}",
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = GreenPrimary
                     )
 
                     if (discount > 0) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "₹${product.actualPrice}",
-                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 12.sp,
                             textDecoration = TextDecoration.LineThrough,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = SecondaryText
                         )
                     }
                 }
@@ -137,20 +142,16 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            shape = CircleShape
-                        ),
+                        .background(GreenPrimary.copy(alpha = 0.15f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.ShoppingCart,
                         contentDescription = "Add to Cart",
-                        modifier = Modifier.size(20.dp)
-                            .clickable {
-                                AppUtil.addToCart(productId = product.id, context = context)
-                            },
-                        tint = Color.Black
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable { AppUtil.addToCart(productId = product.id, context = context) },
+                        tint = GreenPrimary
                     )
                 }
             }
@@ -158,32 +159,14 @@ fun ProductItemView(modifier: Modifier = Modifier, product: ProductModel) {
     }
 }
 
-
-
-private fun calculateDiscount(actualPrice: String, discountPrice: String): Int {
+private fun calculateDiscount(actualPrice: String, price: String): Int {
     return try {
-        // Trim any whitespace and replace any commas or currency symbols
-        val cleanActualPrice = actualPrice.trim().replace("[^0-9.]".toRegex(), "")
-        val cleanDiscountPrice = discountPrice.trim().replace("[^0-9.]".toRegex(), "")
-
-        // Convert to float only if we have valid numbers
-        if (cleanActualPrice.isNotEmpty() && cleanDiscountPrice.isNotEmpty()) {
-            val actual = cleanActualPrice.toFloat()
-            val discounted = cleanDiscountPrice.toFloat()
-
-            // Only calculate if actual price is higher than discounted price
-            if (actual > discounted && actual > 0) {
-                val discount = ((actual - discounted) / actual * 100).toInt()
-                discount
-            } else {
-                0
-            }
-        } else {
-            0
-        }
+        val actual = actualPrice.trim().replace("[^0-9.]".toRegex(), "").toDouble()
+        val current = price.trim().replace("[^0-9.]".toRegex(), "").toDouble()
+        if (actual > current && actual > 0.0) {
+            ((actual - current) / actual * 100).toInt()
+        } else 0
     } catch (e: Exception) {
-        // Log the exception for debugging
-        println("Error calculating discount: ${e.message}")
         0
     }
 }

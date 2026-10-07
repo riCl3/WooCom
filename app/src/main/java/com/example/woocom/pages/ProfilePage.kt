@@ -17,18 +17,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -47,31 +48,39 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.woocom.GlobalNavigation.navController
+import androidx.navigation.NavHostController
+import com.example.woocom.Routes
+import com.example.woocom.components.PremiumBackground
 import com.example.woocom.model.UserModel
+import com.example.woocom.ui.theme.CardSurface
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.NeonBorder
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfilePage(modifier: Modifier = Modifier) {
+fun ProfilePage(navController: NavHostController) {
     var userModel by remember { mutableStateOf<UserModel?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isLoggingOut by remember { mutableStateOf(false) }
 
-    // Fetch user data from Firestore
     LaunchedEffect(Unit) {
         try {
             val userId = Firebase.auth.currentUser?.uid
             if (userId != null) {
-                val userSnapshot = Firebase.firestore.collection("user").document(userId).get().await()
+                val userSnapshot = Firebase.firestore.collection("user")
+                    .document(userId)
+                    .get()
+                    .await()
                 userModel = userSnapshot.toObject(UserModel::class.java)
             }
         } catch (e: Exception) {
-            // Handle error
+            // Keep userModel null; UI falls back to guest state
         } finally {
             isLoading = false
         }
@@ -80,7 +89,7 @@ fun ProfilePage(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("My Profile", color = Color.White) },
+                title = { Text("My Profile", color = PrimaryText) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent
                 )
@@ -88,93 +97,100 @@ fun ProfilePage(modifier: Modifier = Modifier) {
         },
         containerColor = Color.Transparent
     ) { paddingValues ->
-        com.example.woocom.components.PremiumBackground {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(color = Color(0xFF4CAF50))
-            } else if (userModel == null) {
-                Text("Could not load profile.", color = Color.Gray)
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    ProfileHeader(user = userModel)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    ProfileMenu(
-                        onLogoutClicked = {
-                            isLoggingOut = true
-                            Firebase.auth.signOut()
-                            navController.navigate("auth") {
-                                popUpTo("home") {
-                                    inclusive = true
+        PremiumBackground {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+            ) {
+                when {
+                    isLoading -> CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = GreenPrimary
+                    )
+
+                    userModel == null -> Text(
+                        text = "Could not load profile.",
+                        color = SecondaryText,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    else -> Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ProfileHeader(user = userModel)
+                        Spacer(modifier = Modifier.height(24.dp))
+                        ProfileMenu(
+                            navController = navController,
+                            isLoggingOut = isLoggingOut,
+                            onLogoutClicked = {
+                                isLoggingOut = true
+                                Firebase.auth.signOut()
+                                navController.navigate(Routes.AUTH) {
+                                    popUpTo(Routes.HOME) { inclusive = true }
                                 }
                             }
-                        },
-                        isLoggingOut = isLoggingOut
-                    )
+                        )
+                    }
                 }
             }
         }
     }
 }
-}
 
 @Composable
-fun ProfileHeader(user: UserModel?) {
+private fun ProfileHeader(user: UserModel?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
             imageVector = Icons.Default.AccountCircle,
-            contentDescription = "Profile Picture",
+            contentDescription = null,
             modifier = Modifier
                 .size(100.dp)
-                .clip(CircleShape)
-                .background(Color.White),
-            tint = Color(0xFF1A1A1A).copy(alpha = 0.5f)
+                .background(GreenPrimary.copy(alpha = 0.12f), CircleShape)
+                .padding(12.dp),
+            tint = GreenPrimary
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = user?.name ?: "Guest User",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = PrimaryText
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = user?.email ?: "No email provided",
             fontSize = 16.sp,
-            color = Color.Gray
+            color = SecondaryText
         )
     }
 }
 
 @Composable
-fun ProfileMenu(onLogoutClicked: () -> Unit, isLoggingOut: Boolean) {
+private fun ProfileMenu(
+    navController: NavHostController,
+    isLoggingOut: Boolean,
+    onLogoutClicked: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = com.example.woocom.ui.theme.CardSurface),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, com.example.woocom.ui.theme.NeonBorder),
+        colors = CardDefaults.cardColors(containerColor = CardSurface),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column {
-            ProfileMenuItem(icon = Icons.Default.AccountCircle, text = "My Orders", onClick = { navController.navigate("orders") })
-            Divider(modifier = Modifier.padding(horizontal = 16.dp))
-            ProfileMenuItem(icon = Icons.Default.LocationOn, text = "Shipping Addresses", onClick = { navController.navigate("addresses") })
-            Divider(modifier = Modifier.padding(horizontal = 16.dp))
-            ProfileMenuItem(icon = Icons.Default.FavoriteBorder, text = "My Wishlist", onClick = { navController.navigate("favorites") })
-            Divider(modifier = Modifier.padding(horizontal = 16.dp))
-            ProfileMenuItem(icon = Icons.Default.Settings, text = "Settings", onClick = { navController.navigate("settings") })
+            ProfileMenuItem(icon = Icons.AutoMirrored.Filled.ReceiptLong, text = "My Orders", onClick = { navController.navigate(Routes.ORDERS) })
+            HorizontalDivider(color = SecondaryText.copy(alpha = 0.2f))
+            ProfileMenuItem(icon = Icons.Filled.LocationOn, text = "Shipping Addresses", onClick = { navController.navigate(Routes.ADDRESSES) })
+            HorizontalDivider(color = SecondaryText.copy(alpha = 0.2f))
+            ProfileMenuItem(icon = Icons.Filled.Tune, text = "Settings", onClick = { navController.navigate(Routes.SETTINGS) })
         }
     }
 
@@ -186,16 +202,16 @@ fun ProfileMenu(onLogoutClicked: () -> Unit, isLoggingOut: Boolean) {
             .fillMaxWidth()
             .height(56.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFA5E800),
-            contentColor = Color(0xFF1A1A1A)
+            containerColor = GreenPrimary,
+            contentColor = Color(0xFF141414)
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         enabled = !isLoggingOut
     ) {
         if (isLoggingOut) {
             CircularProgressIndicator(
                 modifier = Modifier.size(24.dp),
-                color = Color(0xFF1A1A1A),
+                color = Color(0xFF141414),
                 strokeWidth = 2.dp
             )
         } else {
@@ -209,7 +225,7 @@ fun ProfileMenu(onLogoutClicked: () -> Unit, isLoggingOut: Boolean) {
 }
 
 @Composable
-fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
+private fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -219,20 +235,20 @@ fun ProfileMenuItem(icon: ImageVector, text: String, onClick: () -> Unit = {}) {
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = text,
-            tint = Color.White.copy(alpha = 0.8f)
+            contentDescription = null,
+            tint = GreenPrimary.copy(alpha = 0.8f)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = text,
             fontSize = 16.sp,
-            color = Color.White,
+            color = PrimaryText,
             modifier = Modifier.weight(1f)
         )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = "Go to $text",
-            tint = Color.Gray
+            contentDescription = null,
+            tint = SecondaryText
         )
     }
 }

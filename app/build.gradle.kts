@@ -17,31 +17,47 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Payment key is interpolated from a gradle property so it never lives in
+        // source control. Supply it via gradle.properties or a CI secret.
+        val razorpayKeyId = providers.gradleProperty("RAZORPAY_KEY_ID")
+            .orElse("rzp_test_XXXXXXXXXXXX")
+            .get()
+        buildConfigField("String", "RAZORPAY_KEY_ID", "\"$razorpayKeyId\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
+        buildConfig = true
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -64,5 +80,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.2.0")
     implementation("com.tbuonomo:dotsindicator:5.1.0")
     implementation("androidx.compose.material:material:1.3.1")
+    implementation("androidx.compose.material:material-icons-extended")
     implementation("com.razorpay:checkout:1.6.20")
 }

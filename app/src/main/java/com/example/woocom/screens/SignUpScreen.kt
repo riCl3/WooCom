@@ -1,27 +1,34 @@
-package com.example.woocom.screens
+﻿package com.example.woocom.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,216 +36,255 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.woocom.AppUtil
 import com.example.woocom.R
+import com.example.woocom.Routes
+import com.example.woocom.components.PremiumBackground
+import com.example.woocom.ui.theme.CardSurface
+import com.example.woocom.ui.theme.DarkText
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.NeonBorder
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 import com.example.woocom.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUp(modifier: Modifier = Modifier, navController: NavHostController, authViewModel: AuthViewModel = viewModel()) {
+fun SignUpScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel = viewModel()
+) {
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var context = LocalContext.current
     var isLoading by remember { mutableStateOf(false) }
+    var nameError by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf(false) }
+    var passwordError by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    com.example.woocom.components.PremiumBackground {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Sign", style = TextStyle(
-                fontSize = 60.sp,
-                fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Left,
-                color = Color.White // Text White
+    fun validate(): Boolean {
+        nameError = name.isBlank()
+        emailError = email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        passwordError = password.length < 6
+        return !nameError && !emailError && !passwordError
+    }
 
+    PremiumBackground {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .statusBarsPadding()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Image(
+                painter = painterResource(id = R.drawable.icon_bg),
+                contentDescription = "WooCom logo",
+                modifier = Modifier.size(110.dp)
             )
-        )
-        Text(
-            text = "Up", style = TextStyle(
-                fontSize = 60.sp,
-                fontFamily = FontFamily.Monospace,
-                textAlign = TextAlign.Left,
-                color = Color.White // Text White
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Create account",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = PrimaryText
             )
-        )
 
+            Spacer(modifier = Modifier.height(4.dp))
 
-        //Area For Image
+            Text(
+                text = "Join WooCom and start shopping",
+                fontSize = 14.sp,
+                color = SecondaryText
+            )
 
-        Image(
-            painter = painterResource(id = R.drawable.firstbg),
-            contentDescription = "Login Image"
-        )
+            Spacer(modifier = Modifier.height(28.dp))
 
-
-        //Area For Name
-
-        OutlinedTextField(value = name,
-            onValueChange = { name = it },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Face,
-                    contentDescription = "Name Icon",
-                    tint = Color(0xFFB7FF00) // Green color for the icon)
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFB7FF00),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFFB7FF00),
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            ),
-            label = {
-                Text(
-                    text = "Name",
-                    style = TextStyle(color = Color.White)
-                )
-            }
-        )
-
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        //Area For Email
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            leadingIcon = {
-                // Set the leading icon and tint it green
-                Icon(
-                    imageVector = Icons.Default.Email,
-                    contentDescription = "Email Icon",
-                    tint = Color(0xFFB7FF00) // Green color for the icon
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth() // This makes the TextField take up the full width of its parent
-                .padding(horizontal = 16.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFFB7FF00), // Cursor color is green
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            ),
-            label = {
-                Text(
-                    text = "Email",
-                    style = TextStyle(color = Color.White) // Label color black
-                )
-            }
-        )
-
-
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        //Area For Password
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            leadingIcon = {
-                // Set the leading icon and tint it green
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = "Lock Icon",
-                    tint = Color(0xFFB7FF00) // Green color for the icon
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth() // This makes the TextField take up the full width of its parent
-                .padding(horizontal = 16.dp)
-                .onFocusChanged {
-                    // Optional: Handle focus changes here
-                },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFFB7FF00), // Cursor color is green
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
-            ),
-            label = {
-                Text(
-                    text = "Password",
-                    style = TextStyle(color = Color.White) // Label color black
-                )
-            }
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
-        //Area for Login Button
-
-        Button(
-            onClick = {
-                isLoading = true
-                authViewModel.signup(email,password,name){
-                    success, errorMessage ->
-                    if (success ){
-                        isLoading = false
-                        navController.navigate("home"){
-                            popUpTo("auth"){
-                                inclusive = true
-                            }
-                        }
-                    }else {
-                        isLoading = false
-                        AppUtil.showToast(context = context, errorMessage?:"Something went wrong")
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp) // Added padding to ensure text is inside the button
-                .height(56.dp) // Set a height for the button
-                .border(1.dp, com.example.woocom.ui.theme.NeonBorder) // Border color
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFFB7FF00), // Green color
-                            Color(0xFFB7FF00)  // Lighter green color
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = CardSurface.copy(alpha = 0.9f)),
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, NeonBorder)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            nameError = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Face,
+                                contentDescription = null,
+                                tint = GreenPrimary
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors(),
+                        label = { Text("Full Name") },
+                        singleLine = true,
+                        isError = nameError,
+                        supportingText = if (nameError) {
+                            { Text("Please enter your name") }
+                        } else null,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
                         )
                     )
-                ),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent // Transparent background to let gradient show
-            ), // Avoid excessive padding, set to 0
-            enabled = !isLoading // Disable the button if isLoading is true
-        ) {
-            Text(
-                text = if(isLoading) "Loading..." else "Sign Up",
-                style = TextStyle(fontSize = 20.sp, color = Color.Black)
-            )
-        }
 
-    }
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            emailError = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Email,
+                                contentDescription = null,
+                                tint = GreenPrimary
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors(),
+                        label = { Text("Email") },
+                        singleLine = true,
+                        isError = emailError,
+                        supportingText = if (emailError) {
+                            { Text("Enter a valid email address") }
+                        } else null,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            passwordError = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = GreenPrimary
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = fieldColors(),
+                        label = { Text("Password") },
+                        singleLine = true,
+                        isError = passwordError,
+                        supportingText = if (passwordError) {
+                            { Text("Password must be at least 6 characters") }
+                        } else null,
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = {
+                            if (!validate()) return@Button
+                            isLoading = true
+                            authViewModel.signup(email.trim(), password, name.trim()) { success, errorMessage ->
+                                isLoading = false
+                                if (success) {
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(Routes.AUTH) { inclusive = true }
+                                    }
+                                } else {
+                                    AppUtil.showToast(
+                                        context,
+                                        errorMessage ?: "Something went wrong"
+                                    )
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(54.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GreenPrimary,
+                            contentColor = DarkText
+                        ),
+                        shape = RoundedCornerShape(14.dp),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = DarkText,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(
+                                text = "Sign Up",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Already have an account? ", color = SecondaryText)
+                        TextButton(onClick = { navController.navigate(Routes.LOGIN) }) {
+                            Text("Log In", fontWeight = FontWeight.Bold, color = GreenPrimary)
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun fieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = GreenPrimary,
+    unfocusedBorderColor = GreenPrimary.copy(alpha = 0.35f),
+    cursorColor = GreenPrimary,
+    focusedTextColor = PrimaryText,
+    unfocusedTextColor = PrimaryText,
+    focusedLabelColor = GreenPrimary,
+    unfocusedLabelColor = SecondaryText,
+    errorBorderColor = Color(0xFFFF6B6B),
+    errorLabelColor = Color(0xFFFF6B6B),
+    errorSupportingTextColor = Color(0xFFFF6B6B)
+)

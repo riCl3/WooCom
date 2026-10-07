@@ -1,122 +1,132 @@
 package com.example.woocom.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.ImeAction
-import com.example.woocom.GlobalNavigation
-
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.firestore.FirebaseFirestore
+import androidx.navigation.NavHostController
+import com.example.woocom.Routes
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HeaderView(modifier: Modifier = Modifier) {
+fun HeaderView(
+    modifier: Modifier = Modifier,
+    navController: NavHostController
+) {
     var name by remember { mutableStateOf("") }
-    var searcher by remember { mutableStateOf("") }
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid
-        if (uid != null) {
-            FirebaseFirestore.getInstance().collection("user")
-                .document(uid)
-                .get().addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        name = task.result?.get("name").toString()
-                    }
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return@LaunchedEffect
+        FirebaseFirestore.getInstance().collection("user")
+            .document(uid)
+            .get().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    name = task.result?.getString("name").orEmpty()
                 }
+            }
+    }
+
+    fun submitSearch() {
+        if (searchQuery.isNotBlank()) {
+            navController.navigate(Routes.search(searchQuery))
         }
     }
 
     Row(
         modifier = modifier
-            .fillMaxWidth() // Top padding handled by HomePage statusBarsPadding
-            .padding(top = 8.dp), 
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Welcome,",
                 style = TextStyle(
-                    fontSize = 30.sp,
-                    fontFamily = FontFamily.Cursive,
-                    textAlign = TextAlign.Start,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White // Dark Mode
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = SecondaryText
                 )
             )
             Text(
-                text = name,
+                text = name.ifBlank { "shopper" },
                 style = TextStyle(
                     fontSize = 20.sp,
                     fontWeight = FontWeight.ExtraBold,
                     fontFamily = FontFamily.SansSerif,
-                    textAlign = TextAlign.Start,
-                    color = Color.White // Dark Mode
-                )
+                    color = PrimaryText
+                ),
+                maxLines = 1
             )
         }
 
         OutlinedTextField(
-            value = searcher,
-            onValueChange = { searcher = it },
-            trailingIcon = {
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search Icon",
-                    tint = Color(0xFFB7FF00), // Green color for the icon
-                    modifier = Modifier.clickable {
-                        if (searcher.isNotBlank()) {
-                            GlobalNavigation.navController.navigate("search/$searcher")
-                        }
-                    }
+                    contentDescription = "Search",
+                    tint = GreenPrimary
                 )
             },
             modifier = Modifier
-                .weight(1.8f)
-                .height(55.dp),
+                .weight(1.6f)
+                .height(54.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFB7FF00), // Focused border color is green
-                unfocusedBorderColor = Color.LightGray, 
-                cursorColor = Color(0xFFB7FF00), // Cursor color is green
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                focusedBorderColor = GreenPrimary,
+                unfocusedBorderColor = GreenPrimary.copy(alpha = 0.4f),
+                cursorColor = GreenPrimary,
+                focusedTextColor = PrimaryText,
+                unfocusedTextColor = PrimaryText
             ),
             placeholder = {
                 Text(
-                    text = "Search",
-                    style = TextStyle(color = Color.LightGray,
-                        textAlign = TextAlign.Center,
-                        fontSize = 10.sp) // Placeholder text style
+                    text = "Search products",
+                    style = TextStyle(
+                        color = SecondaryText,
+                        fontSize = 14.sp
+                    )
                 )
             },
-            shape = RoundedCornerShape(40.dp),
+            shape = RoundedCornerShape(30.dp),
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(
-                onSearch = {
-                     if (searcher.isNotBlank()) {
-                        GlobalNavigation.navController.navigate("search/$searcher")
-                    }
-                }
-            )
+            keyboardActions = KeyboardActions(onSearch = { submitSearch() })
         )
     }
 }

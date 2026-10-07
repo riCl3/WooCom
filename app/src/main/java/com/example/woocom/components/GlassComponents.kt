@@ -1,48 +1,37 @@
 package com.example.woocom.components
 
-import android.os.Build
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.woocom.ui.theme.GlassSurface
-import com.example.woocom.ui.theme.NeonBorder
 import com.example.woocom.ui.theme.DarkSurface
+import com.example.woocom.ui.theme.NeonBorder
 
 /**
- * Applies a premium glassmorphism effect.
- * Uses blur on Android 12+ (API 31+), and a sophisticated semi-transparent fallback on older versions.
+ * Frosted "glass" surface: a translucent dark fill with a subtle top-light edge,
+ * mimicking frosted glass without a hardware backdrop blur (which Compose does
+ * not yet support cross-version).
  */
 fun Modifier.glassEffect(
-    shape: Shape = RoundedCornerShape(24.dp),
-    blurRadius: Dp = 30.dp
+    shape: Shape = RoundedCornerShape(24.dp)
 ): Modifier = this
     .clip(shape)
-    .then(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            Modifier.blur(blurRadius)
-        } else {
-            Modifier
-        }
-    )
-    .background(GlassSurface)
+    .background(DarkSurface.copy(alpha = 0.55f))
     .border(
         width = 1.dp,
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.15f),
-                Color.White.copy(alpha = 0.05f)
+                Color.White.copy(alpha = 0.22f),
+                Color.White.copy(alpha = 0.04f)
             )
         ),
         shape = shape
@@ -54,11 +43,7 @@ fun GlassCard(
     shape: Shape = RoundedCornerShape(16.dp),
     content: @Composable BoxScope.() -> Unit
 ) {
-    Box(
-        modifier = modifier
-            .glassEffect(shape = shape)
-            .padding(0.dp) // Reset padding, let caller handle internal padding
-    ) {
+    Box(modifier = modifier.glassEffect(shape = shape)) {
         content()
     }
 }

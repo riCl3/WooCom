@@ -1,15 +1,26 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.idea/
+.vscode/
+.kotlin/
+.opencode/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
-local.properties
+
+# Logs and scratch output (keep the repo clean for portfolio)
+*.log
+build_log*.txt
+scratch_*
+
+# Build artifacts
+*.apk
+*.aab
+*.ap_
+
+# Keystores
+*.jks
+*.keystore

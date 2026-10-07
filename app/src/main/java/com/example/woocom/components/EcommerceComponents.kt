@@ -2,39 +2,56 @@ package com.example.woocom.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
-import com.example.woocom.GlobalNavigation
+import com.example.woocom.Routes
 import com.example.woocom.model.ProductModel
-import com.example.woocom.components.GlassCard
-import com.example.woocom.components.NeonGlassCard
+import com.example.woocom.ui.theme.GradientEnd
+import com.example.woocom.ui.theme.GradientStart
+import com.example.woocom.ui.theme.GreenPrimary
+import com.example.woocom.ui.theme.PriceRed
+import com.example.woocom.ui.theme.PrimaryText
+import com.example.woocom.ui.theme.SecondaryText
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.toObject
-import kotlin.random.Random
 
-import androidx.compose.ui.graphics.Brush
-import com.example.woocom.ui.theme.GradientStart
-import com.example.woocom.ui.theme.GradientEnd
-
+/** App-wide premium dark gradient backdrop. */
 @Composable
-fun PremiumBackground(
-    content: @Composable BoxScope.() -> Unit
-) {
+fun PremiumBackground(content: @Composable BoxScope.() -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -48,67 +65,33 @@ fun PremiumBackground(
     }
 }
 
-// Deals of the Day Component
 @Composable
-fun DealsOfTheDayView(modifier: Modifier = Modifier) {
-    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
-
-    LaunchedEffect(Unit) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("products")
-            .limit(10)
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val resultList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(ProductModel::class.java)
-                    }
-                    productList = resultList
-                }
-            }
-    }
-
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(productList) { item ->
-            DealProductItem(product = item)
-        }
+fun DealsOfTheDayView(modifier: Modifier = Modifier, navController: NavHostController) {
+    ProductRow(modifier = modifier, limit = 10) { product ->
+        DealProductItem(product = product, navController = navController)
     }
 }
 
 @Composable
-fun DealProductItem(product: ProductModel) {
-    // Calculate discount percentage
-    val discount = try {
-        val actual = product.actualPrice.toDouble()
-        val current = product.price.toDouble()
-        if (actual > current) {
-            ((actual - current) / actual * 100).toInt()
-        } else 0
-    } catch (e: Exception) {
-        Random.nextInt(10, 50) // Random discount for demo
-    }
+fun DealProductItem(product: ProductModel, navController: NavHostController) {
+    val discount = calculateDiscount(product.actualPrice, product.price)
 
     NeonGlassCard(
         modifier = Modifier
             .width(160.dp)
-            .height(220.dp)
-            .clickable {
-                GlobalNavigation.navController.navigate("product-details/${product.id}")
-            },
+            .height(230.dp)
+            .clickable { navController.navigate(Routes.productDetails(product.id)) },
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
+        Column(modifier = Modifier.padding(8.dp)) {
             AsyncImage(
-                model = if (product.images.isNotEmpty()) product.images[0] else "",
-                contentDescription = "Product Image",
+                model = product.images.firstOrNull(),
+                contentDescription = product.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(110.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -118,7 +101,7 @@ fun DealProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White // Title White
+                    color = PrimaryText
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -126,21 +109,21 @@ fun DealProductItem(product: ProductModel) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "₹${product.price}",
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
-                        color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
+                        color = GreenPrimary
                     )
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                if (product.actualPrice.isNotEmpty() && product.actualPrice != product.price) {
+                if (product.actualPrice.isNotBlank() && product.actualPrice != product.price) {
                     Text(
                         text = "₹${product.actualPrice}",
                         style = TextStyle(
                             fontSize = 12.sp,
-                            color = Color.Gray,
+                            color = SecondaryText,
                             textDecoration = TextDecoration.LineThrough
                         )
                     )
@@ -151,17 +134,14 @@ fun DealProductItem(product: ProductModel) {
 
             if (discount > 0) {
                 Text(
-                    text = "${discount}% OFF",
+                    text = "$discount% OFF",
                     style = TextStyle(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     ),
                     modifier = Modifier
-                        .background(
-                            com.example.woocom.ui.theme.PriceRed, // Requested: Red/Orange
-                            shape = RoundedCornerShape(4.dp)
-                        )
+                        .background(PriceRed, RoundedCornerShape(4.dp))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 )
             }
@@ -169,58 +149,31 @@ fun DealProductItem(product: ProductModel) {
     }
 }
 
-// Featured Products Component
 @Composable
-fun FeaturedProductsView(modifier: Modifier = Modifier) {
-    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
-
-    LaunchedEffect(Unit) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("products")
-            .limit(10)
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val resultList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(ProductModel::class.java)
-                    }
-                    productList = resultList
-                }
-            }
-    }
-
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(productList) { item ->
-            FeaturedProductItem(product = item)
-        }
+fun FeaturedProductsView(modifier: Modifier = Modifier, navController: NavHostController) {
+    ProductRow(modifier = modifier, limit = 10) { product ->
+        FeaturedProductItem(product = product, navController = navController)
     }
 }
 
 @Composable
-fun FeaturedProductItem(product: ProductModel) {
-    val randomRating = remember { Random.nextDouble(3.5, 5.0) }
-
+fun FeaturedProductItem(product: ProductModel, navController: NavHostController) {
     GlassCard(
         modifier = Modifier
             .width(140.dp)
-            .height(180.dp)
-            .clickable {
-                GlobalNavigation.navController.navigate("product-details/${product.id}")
-            },
+            .height(190.dp)
+            .clickable { navController.navigate(Routes.productDetails(product.id)) },
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
+        Column(modifier = Modifier.padding(8.dp)) {
             AsyncImage(
-                model = if (product.images.isNotEmpty()) product.images[0] else "",
-                contentDescription = "Product Image",
+                model = product.images.firstOrNull(),
+                contentDescription = product.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(90.dp)
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -230,7 +183,7 @@ fun FeaturedProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White // Title White
+                    color = PrimaryText
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -243,79 +196,38 @@ fun FeaturedProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
+                    color = GreenPrimary
                 )
             )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "⭐",
-                    fontSize = 10.sp
-                )
-                Text(
-                    text = String.format("%.1f", randomRating),
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        color = Color.Gray
-                    )
-                )
-            }
-        }
-    }
-}
-
-// Recently Viewed Component
-@Composable
-fun RecentlyViewedView(modifier: Modifier = Modifier) {
-    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
-
-    LaunchedEffect(Unit) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("products")
-            .limit(8)
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val resultList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(ProductModel::class.java)
-                    }
-                    productList = resultList
-                }
-            }
-    }
-
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(productList) { item ->
-            RecentlyViewedItem(product = item)
         }
     }
 }
 
 @Composable
-fun RecentlyViewedItem(product: ProductModel) {
+fun RecentlyViewedView(modifier: Modifier = Modifier, navController: NavHostController) {
+    ProductRow(modifier = modifier, limit = 8) { product ->
+        RecentlyViewedItem(product = product, navController = navController)
+    }
+}
+
+@Composable
+fun RecentlyViewedItem(product: ProductModel, navController: NavHostController) {
     NeonGlassCard(
         modifier = Modifier
             .width(100.dp)
-            .height(140.dp)
-            .clickable {
-                GlobalNavigation.navController.navigate("product-details/${product.id}")
-            },
+            .height(150.dp)
+            .clickable { navController.navigate(Routes.productDetails(product.id)) },
         shape = RoundedCornerShape(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(6.dp)
-        ) {
+        Column(modifier = Modifier.padding(6.dp)) {
             AsyncImage(
-                model = if (product.images.isNotEmpty()) product.images[0] else "",
-                contentDescription = "Product Image",
+                model = product.images.firstOrNull(),
+                contentDescription = product.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(70.dp)
+                    .height(80.dp)
+                    .clip(RoundedCornerShape(6.dp))
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -325,7 +237,7 @@ fun RecentlyViewedItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White
+                    color = PrimaryText
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -338,65 +250,38 @@ fun RecentlyViewedItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
-                    color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
+                    color = GreenPrimary
                 )
             )
         }
     }
 }
 
-// Recommended Products Component
 @Composable
-fun RecommendedView(modifier: Modifier = Modifier) {
-    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
-
-    LaunchedEffect(Unit) {
-        Firebase.firestore.collection("data")
-            .document("stock")
-            .collection("products")
-            .limit(10)
-            .get().addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val resultList = task.result.documents.mapNotNull { doc ->
-                        doc.toObject(ProductModel::class.java)
-                    }
-                    productList = resultList
-                }
-            }
-    }
-
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(productList) { item ->
-            RecommendedProductItem(product = item)
-        }
+fun RecommendedView(modifier: Modifier = Modifier, navController: NavHostController) {
+    ProductRow(modifier = modifier, limit = 10) { product ->
+        RecommendedProductItem(product = product, navController = navController)
     }
 }
 
 @Composable
-fun RecommendedProductItem(product: ProductModel) {
-    val randomRating = remember { Random.nextDouble(4.0, 5.0) }
-
+fun RecommendedProductItem(product: ProductModel, navController: NavHostController) {
     GlassCard(
         modifier = Modifier
             .width(150.dp)
-            .height(190.dp)
-            .clickable {
-                GlobalNavigation.navController.navigate("product-details/${product.id}")
-            },
+            .height(200.dp)
+            .clickable { navController.navigate(Routes.productDetails(product.id)) },
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
-        ) {
+        Column(modifier = Modifier.padding(8.dp)) {
             AsyncImage(
-                model = if (product.images.isNotEmpty()) product.images[0] else "",
-                contentDescription = "Product Image",
+                model = product.images.firstOrNull(),
+                contentDescription = product.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(90.dp)
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -406,7 +291,7 @@ fun RecommendedProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White // Title White
+                    color = PrimaryText
                 ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -419,46 +304,52 @@ fun RecommendedProductItem(product: ProductModel) {
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = com.example.woocom.ui.theme.GreenPrimary // Price Neon Green
+                    color = GreenPrimary
                 )
             )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "⭐",
-                        fontSize = 10.sp
-                    )
-                    Text(
-                        text = String.format("%.1f", randomRating),
-                        style = TextStyle(
-                            fontSize = 10.sp,
-                            color = Color.Gray
-                        )
-                    )
-                }
-
-                Text(
-                    text = "Recommended",
-                    style = TextStyle(
-                        fontSize = 8.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black // Black text on Neon Green
-                    ),
-                    modifier = Modifier
-                        .background(
-                            Color(0xFFB7FF00), // Neon Green
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 4.dp, vertical = 1.dp)
-                )
-            }
         }
+    }
+}
+
+/** Internal helper that loads a product carousel from Firestore. */
+@Composable
+private fun ProductRow(
+    modifier: Modifier,
+    limit: Int,
+    itemBuilder: @Composable (ProductModel) -> Unit
+) {
+    var productList by remember { mutableStateOf(listOf<ProductModel>()) }
+
+    LaunchedEffect(Unit) {
+        Firebase.firestore.collection("data")
+            .document("stock")
+            .collection("products")
+            .limit(limit.toLong())
+            .get().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    productList = task.result.documents.mapNotNull { doc ->
+                        doc.toObject(ProductModel::class.java)
+                    }
+                }
+            }
+    }
+
+    LazyRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(productList) { item -> itemBuilder(item) }
+    }
+}
+
+private fun calculateDiscount(actualPrice: String, price: String): Int {
+    return try {
+        val actual = actualPrice.trim().replace("[^0-9.]".toRegex(), "").toDouble()
+        val current = price.trim().replace("[^0-9.]".toRegex(), "").toDouble()
+        if (actual > current && actual > 0.0) {
+            ((actual - current) / actual * 100).toInt()
+        } else 0
+    } catch (e: NumberFormatException) {
+        0
     }
 }

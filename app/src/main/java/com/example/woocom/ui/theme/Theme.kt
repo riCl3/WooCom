@@ -1,54 +1,63 @@
 package com.example.woocom.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = NeonGreen,
+    onPrimary = DarkText,
+    primaryContainer = NeonGreen.copy(alpha = 0.16f),
+    onPrimaryContainer = PrimaryText,
+    secondary = Emerald,
+    onSecondary = Color(0xFF00210F),
+    tertiary = DeepSkyBlue,
+    onTertiary = Color(0xFF001E2B),
+    background = DeepCharcoal,
+    onBackground = PrimaryText,
+    surface = DarkSurface,
+    onSurface = PrimaryText,
+    surfaceVariant = GradientStart,
+    onSurfaceVariant = SecondaryText,
+    outline = NeonGreen.copy(alpha = 0.35f),
+    error = Color(0xFFFF6B6B),
+    onError = Color(0xFF5C0000)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
+    primary = NeonGreen,
+    onPrimary = DarkText,
+    primaryContainer = NeonGreen.copy(alpha = 0.25f),
+    onPrimaryContainer = LightOnSurface,
+    secondary = Color(0xFF0B8A4F),
     onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    background = LightBackground,
+    onBackground = LightOnSurface,
+    surface = LightSurface,
+    onSurface = LightOnSurface,
+    surfaceVariant = Color(0xFFE9EAE6),
+    onSurfaceVariant = Color(0xFF5C5F56),
+    outline = NeonGreen,
+    error = Color(0xFFB00020),
+    onError = Color.White
 )
 
+/**
+ * Brand theme for WooCom.
+ *
+ * The shopping experience is designed as a dark, neon-accented storefront, so the
+ * app always renders the dark palette to preserve the visual identity. Dynamic
+ * colour is intentionally off to keep the brand accent consistent across devices.
+ */
 @Composable
 fun WooComTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
