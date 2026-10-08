@@ -110,25 +110,25 @@ Supabase project is running the app.
 ## 6. Running it locally
 
 ```bash
-supabase start                 # Docker; applies supabase/migrations/*.sql then seed.sql
-supabase functions serve       # loads .env with RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET
+supabase start                 # Docker; applies supabase/migrations/*.sql (schema + demo catalogue)
+supabase functions serve       # loads supabase/.env (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET, git-ignored)
 ```
 
-Then supply the project URL and anon key to Gradle (they are *public* identifiers — the
-secret is the RLS, not the URL):
+The project URL and publishable key live in `gradle.properties` (they are *public* identifiers — the
+secret is the RLS, not the URL). Blank them to keep running against Firestore — the two backends
+coexist behind the same interfaces precisely so the switch is reversible.
 
-```properties
-# gradle.properties (local only, or CI secret)
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_ANON_KEY=eyJ...
+Against the hosted project the same files are applied with the CLI:
+
+```bash
+supabase db push                           # migrations/*.sql, in filename order
+supabase functions deploy create-razorpay-order verify-payment
+supabase secrets set RAZORPAY_KEY_ID=… RAZORPAY_KEY_SECRET=…
 ```
-
-Leave them blank to keep running against Firestore — the two backends coexist behind the
-same interfaces precisely so the switch is reversible.
 
 ## 7. Open follow-ups
 
-- Export the live Firestore catalogue into `seed.sql` (the current seed is a stand-in).
+- Export the live Firestore catalogue into the seed migration (the current demo catalogue is a stand-in).
 - Move `products.price` from display strings to `numeric` once the UI formats from paise.
 - `order_items` table if line-level pricing/discounts appear.
 - Storage bucket for product images (currently remote URLs).

@@ -93,9 +93,8 @@ app/src/main/java/com/example/woocom/
 └── components/           # shared Compose UI + loading/error/empty states
 
 supabase/
-├── migrations/           # schema, RLS, mark_order_paid / mark_order_failed / add_to_cart
-├── functions/            # create-razorpay-order, verify-payment (Deno)
-└── seed.sql              # local catalogue + categories
+├── migrations/           # schema, RLS, RPCs + the idempotent demo-catalogue seed
+└── functions/            # create-razorpay-order, verify-payment (Deno)
 ```
 
 ## Data model
@@ -140,16 +139,19 @@ Optional payment key (never committed — interpolated as a `BuildConfig` field)
 RAZORPAY_KEY_ID=rzp_test_xxxxxxxx
 ```
 
-Optional Supabase backend (leave both unset to keep running against Firestore):
+Supabase backend — the project URL and publishable key are committed in `gradle.properties` (they are
+public identifiers that ship in any APK regardless); blank them there to fall back to Firestore:
 
 ```properties
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_ANON_KEY=eyJ...
+SUPABASE_URL=https://xojfgypktdeodsnciley.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_…   # full value in gradle.properties
 ```
 
+Against a local stack instead (schema + demo catalogue both come from `supabase/migrations/*.sql`):
+
 ```bash
-supabase start                 # Docker; applies supabase/migrations/*.sql then seed.sql
-supabase functions serve       # loads .env with RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET
+supabase start                 # Docker
+supabase functions serve       # loads supabase/.env (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET, git-ignored)
 ```
 
 Release signing is opt-in via `WOOCOM_KEYSTORE`, `WOOCOM_KEYSTORE_PASSWORD`, `WOOCOM_KEY_ALIAS`,
@@ -185,5 +187,5 @@ Honest state of the art for this repo:
 - Not yet exercised against a live Supabase project: the schema, RPCs and functions are verified by compile +
   review only in this repo (no credentials or emulator in CI).
 
-Roadmap: live Supabase smoke test, export the Firestore catalogue into `seed.sql`, offline Room cache,
+Roadmap: export the real Firestore catalogue into the seed migration, offline Room cache,
 `paging3` catalogue, Compose UI tests, Baseline Profile, dark-mode and accessibility passes.

@@ -24,3 +24,7 @@ scratch_*
 # Keystores
 *.jks
 *.keystore
+
+# Supabase local secrets (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET)
+supabase/.env
+supabase/.temp/
